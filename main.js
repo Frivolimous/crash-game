@@ -1,191 +1,206 @@
-var entryFeeText = document.getElementById('entry-fee');
-var mainButton = document.getElementById('sim-button');
-var resultList = document.getElementById('result-list');
-var yourList = document.getElementById('your-list');
-var autoToggle = document.getElementById('auto-toggle');
-var autoBail = document.getElementById('auto-bail-check');
-var autoBailText = document.getElementById('auto-bail-text');
-var playerMoneyDisplay = document.getElementById('player-money');
-var ticker = new JMTicker(30);
-var player = new Player(400, 500, 100);
-var enemies = [];
-var vfx = [];
-var crash = new CrashManager();
-var resultAdded = false;
-var countdownTime = -1;
-var countdownDelay = 0;
-var enemyDelay = 0;
-var minEnemyDelay = 500 / 30;
-var incEnemyDelay = 500 / 30;
-var minSpeed = 10;
-var incSpeed = 10;
-var playerMoney = 100;
-var gameDisplayLimit = 30;
-var enemiesSpawned = 0;
+const gameConfig = {
+    framerate: 30,
+    startingMoney: 100,
+    maxNodes: 30,
+}
+
+const footer = {
+    entryFeeText: document.getElementById('entry-fee'),
+    autoToggle: document.getElementById('auto-toggle'),
+    autoBail: document.getElementById('auto-bail-check'),
+    autoJoin: document.getElementById('auto-join-check'),
+    autoBailText: document.getElementById('auto-bail-text'),
+    playerMoneyDisplay: document.getElementById('player-money'),
+}
+
+// GameControl
+var mainController;
+
+// Game Model
 var bailoutCash = 0;
-var entryFee = 0;
 
-var view;
-
-mainButton.addEventListener('click', resetGame);
-autoToggle.addEventListener('click', onAutoToggle);
-document.getElementById('bail-button').addEventListener('click', bailout);
-document.getElementById('gen-button').addEventListener('click', () => simulateResults(30));
-
-window.addEventListener('keydown', (e) => {
-    switch(e.key.toLowerCase()) {
-        case 'p': resetGame(); break;
-        case ' ': bailout(); break;
-    }
-});
+// Views
+var canvasView;
+var resultView;
 
 function init() {
-    view = new GameView(document.getElementById('main-canvas'));
+    // select game type
+    game = new GameAbstract();
 
-    ticker.onTick = onTick;
-    ticker.start();
-    autoToggle.checked = true;
-    simulateResults(10);
-    countdownTime = 5;
-    countdownDelay = 1000 / 30;
-    updatePlayerMoneyDisplay(playerMoney);
+    // initialize singletons
+    canvasView = new GameView(document.getElementById('main-canvas'));
+    resultView = new ResultView(
+        document.getElementById('result-list'),
+        yourList = document.getElementById('your-list'),
+        gameConfig.maxNodes
+    );
+    var playerM = new PlayerModel();
+    playerM.onMoneyChange = (money) => footer.playerMoneyDisplay.innerHTML = `Balance: $${money.toFixed(2)}`;
+    playerM.money = gameConfig.startingMoney;
+
+    mainController = new MainController(game, playerM);
+
+    document.getElementById('instructions-text').innerHTML = game.instructions;
+    document.getElementById('sim-button').addEventListener('click', mainController.reset);
+    document.getElementById('bail-button').addEventListener('click', mainController.bailout);
+    document.getElementById('gen-button').addEventListener('click', () => addFakeResults(30));
+
+    window.addEventListener('keydown', (e) => {
+        switch(e.key.toLowerCase()) {
+            case 'p': mainController.reset(); break;
+            case ' ': mainController.bailout(); break;
+            case 'c': mainController.crash.crashed = true; break;
+            case '1': selectGame(1); break;
+            case '0': selectGame(0); break;
+        }
+    });
+
+    addFakeResults(10);
+    mainController.crash.fakeResult();
+    resultView.addResult(mainController.crash.multiplier);
+    resultView.playerCanceled('No Entry');
+    selectGame(1);
 }
 
-function playerJoin() {
-    player.exists = true;
-    entryFee = Number(entryFeeText.value);
-    playerMoney -= entryFee;
-    updatePlayerMoneyDisplay(playerMoney);
-}
-
-function removePlayer() {
-    addYour(-2);
-    player.exists = false;
-    playerMoney += entryFee;
-    updatePlayerMoneyDisplay(playerMoney);
-}
-
-var simulateResults = (count) =>{
-    var results = [];
-    console.log('count', count);
-    var money = playerMoney;
-    for (var i = 0; i < count; i++) {
-        results.push(generateResult());
+function selectGame(index) {
+    var game;
+    switch(index) {
+        case 1: game = new GameBasic(); break;
+        default: game = new GameAbstract(); break;
     }
-    playerMoney = money;
+
+    mainController.game.destroy();
+    mainController.game = game;
+    mainController.crash.crashed = true;
+}
+
+function addFakeResults(count) {
+    var results = CrashManager.simulateResults(count);
+
+    results.forEach(mult => {
+        resultView.addResult(mult);
+        resultView.playerCanceled('No Entry');
+    });
+}
+
+function simulateResults(count) {
+    var results = CrashManager.simulateResults(count);
 
     return JSON.stringify(results);
 }
 
-function resetGame() {
-    if (!crash.crashed) addResult(-1);
-    if (player.exists) addYour(-3);
-    crash.reset();
-    resultAdded = false;
-    enemyDelay = 1;
-    enemies = [];
-    enemiesSpawned = 0;
-    playerJoin();
-}
+class MainController {
+    crashProcessed = true;
+    failProcessed = true;
+    countdownTimer = new Timer(5000 / 30, 0);
 
-function updatePlayerMoneyDisplay(money) {
-    playerMoneyDisplay.innerHTML = `Balance: $${money.toFixed(2)}`;
-}
+    game;
+    crash = new CrashManager();
+    playerM;
 
-function bailout() {
-    if (!crash.crashed && player.exists) {
-        addYour(crash.multiplier * entryFee);
-        player.exists = false;
-        vfx.push(new GrowingCircle(player.x, player.y, '#00ff00', 10, 1, 0.01));
-        vfx.push(new FlyingText(player.x, player.y, 'Bailout!', '#000000', 10, 1.5, 0.03));
-        vfx.push(new GrowingRing(player.x, player.y, '#44ff77', 1, 3, 0.1, 0));
-        vfx.push(new GrowingRing(player.x, player.y, '#44ff77', 1, 3, 0.1, 6));
-        vfx.push(new GrowingRing(player.x, player.y, '#44ff77', 1, 3, 0.1, 12));
-        playerMoney += crash.multiplier * entryFee;
-        updatePlayerMoneyDisplay(playerMoney);
+    ticker = new JMTicker(gameConfig.framerate);
+
+
+    constructor(game, playerM) {
+        this.game = game;
+        this.playerM = playerM;
+
+        this.countdownTimer.reset();
+
+        this.ticker.onTick = this.onTick;
+        this.ticker.start();
     }
-}
 
-function onAutoToggle() {
-    console.log(autoToggle.checked);
-}
-
-function addEnemy(row) {
-    enemies.push(new Enemy(minSpeed + Math.random() * incSpeed, row, 600));
-    enemiesSpawned++;
-}
-
-var onTick = () => {
-    if (crash.crashed) {
-        if (!resultAdded) {
-            resultAdded = true;
-            if (player.exists) {
-                addYour(-1);
-            }
-            addResult(crash.multiplier);
-            vfx.push(new Firework(player.location.x, player.location.y, 20, '#00aaff', 2));
-            if (player.exists) {
-                player.exists = false;
-                vfx.push(new Firework(player.x, player.y, 10, '#00ff00', 1));
-            }
-            countdownTime = 5;
-            countdownDelay = 1000 / 30;
+    reset() {
+        if (!this.crash.crashed) resultView.runCancelled();
+        if (this.game.playerExists) resultView.playerCanceled();
+        this.crash.reset();
+        this.crashProcessed = false;
+        this.failProcessed = false;
+        this.game.reset();
+        if (footer.autoJoin.checked) {
+            this.playerJoin();
+        } else {
+            resultView.playerCanceled('No Entry');
+            this.failProcessed = true;
         }
+    }
+
+    onTick = () => {
+        if (this.crash.crashed) {
+            if (!this.crashProcessed) {
+                this.crashProcessed = true;
+                resultView.addResult(this.crash.multiplier);
+                if (!this.failProcessed) {
+                    this.failProcessed = true;
+                    resultView.playerCrashed();
+                }
+                this.game.gameEnd();
+                
+                this.countdownTimer.reset();
+            }
+        
+            if (footer.autoToggle.checked) {
+                this.countdownTimer.tick();
+                if (this.countdownTimer.complete()) {
+                    this.reset();
+                }
+            }
+        } else {
+            this.crash.onTick();
+            this.game.onTick();
     
-        if (autoToggle.checked) {
-            countdownDelay -= 1;
-            if (countdownDelay <= 0) {
-                countdownDelay += 1000 / 30;
-                countdownTime--;
-    
-                if (countdownTime < 0) {
-                    resetGame();
+            if (!this.game.playerExists) {
+                if (!this.failProcessed) {
+                    this.failProcessed = true;
+                    resultView.playerFailed();
+                }
+            } else {
+                bailoutCash = this.crash.multiplier * this.playerM.entryFee;
+                if (footer.autoBail.checked) {
+                    if (this.crash.multiplier >= Number(footer.autoBailText.value)) {
+                        this.bailout();
+                    }
                 }
             }
         }
-    } else {
-        player.update();
-        crash.onTick();
-
-        if (player.exists) {
-            bailoutCash = crash.multiplier * entryFee;
-        }
-
-        if (autoBail.checked) {
-            if (crash.multiplier >= Number(autoBailText.value)) {
-                bailout();
-            }
-        }
     
-        enemyDelay--;
-        if (enemyDelay <= 0) {
-            enemyDelay = minEnemyDelay + Math.random() * incEnemyDelay;
-            addEnemy(Math.floor( -1 + Math.random() * 3))
-        }
+        canvasView.drawFrame();
+    }
 
-        for (var i = enemies.length - 1; i >= 0; i--) {
-            var el = enemies[i];
-            el.update();
-            if (player.exists && el.collisionTest(player)) {
-                player.exists = false;
-                addYour(0);
-                vfx.push(new Firework(player.x, player.y, 10, '#00ff00', 1));
-            }
-            if (el.toDestroy) {
-                enemies.splice(i, 1);
-            }
+    bailout() {
+        if (!this.crash.crashed && this.game.playerExists) {
+            this.game.bailout();
+            this.failProcessed = true;
+
+            var payout = this.crash.multiplier * this.playerM.entryFee;
+            resultView.playerResult(payout);
+            this.playerM.money += payout;
         }
     }
 
-    view.drawFrame();
+    playerJoin() {
+        this.playerM.entryFee = Number(footer.entryFeeText.value);
+        this.playerM.money -= this.playerM.entryFee;
+
+        this.game.addPlayer();
+    }
 }
 
-function addResult(mult) {
-    let newNode = document.createElement('div');
-    newNode.classList.add('result-entry');
-    if (mult < 0) {
-        newNode.append('Run Canceled');
-    } else {
+class ResultView {
+    mainResultContainer;
+    playerResultContainer;
+    maxNodes;
+
+    constructor(mainResultContainer, playerResultContainer, maxNodes = 30) {
+        this.mainResultContainer = mainResultContainer;
+        this.playerResultContainer = playerResultContainer;
+        this.maxNodes = maxNodes;
+    }
+
+    addResult(mult) {
+        let newNode = document.createElement('div');
+        newNode.classList.add('result-entry');
         newNode.append(`Crash: x${mult.toPrecision(3)}`);
         if (mult < 1) {
             newNode.style.background = '#ffcccc';
@@ -200,50 +215,63 @@ function addResult(mult) {
         } else {
             newNode.style.background = '#ccaaff';
         }
+        this.mainResultContainer.appendChild(newNode);
+        this.checkOverflow(this.mainResultContainer);
     }
-    resultList.appendChild(newNode);
-    if (resultList.children.length > gameDisplayLimit) {
-        resultList.removeChild(resultList.children[0]);
-    }
-}
 
-function addYour(mult) {
-    let newNode = document.createElement('div');
-    newNode.classList.add('result-entry');
-    if (mult > 0) {
+    runCancelled(text = 'Run Canceled') {
+        let newNode = document.createElement('div');
+        newNode.classList.add('result-entry');
+        newNode.innerHTML = text;
+        this.mainResultContainer.appendChild(newNode);
+        this.checkOverflow(this.mainResultContainer);
+    }
+
+    playerCrashed() {
+        let newNode = document.createElement('div');
+        newNode.classList.add('result-entry');
+        newNode.innerHTML = 'Crashed...';
+        newNode.style.background = '#aa4444';
+        this.playerResultContainer.appendChild(newNode);
+        this.checkOverflow(this.playerResultContainer);
+    }
+
+    playerFailed() {
+        let newNode = document.createElement('div');
+        newNode.classList.add('result-entry');
+        newNode.innerHTML = 'Failure!';
+        newNode.style.background = '#bb9944';
+        this.playerResultContainer.appendChild(newNode);
+        this.checkOverflow(this.playerResultContainer);
+    }
+
+    playerCanceled(text = 'Canceled') {
+        let newNode = document.createElement('div');
+        newNode.classList.add('result-entry');
+        newNode.innerHTML = text;
+        this.playerResultContainer.appendChild(newNode);
+        this.checkOverflow(this.playerResultContainer);
+    }
+    
+    playerResult(mult) {
+        let newNode = document.createElement('div');
+        newNode.classList.add('result-entry');
         newNode.append(`Earned: $${mult.toFixed(2)}`);
         newNode.style.background = '#44dd44';
-    } else {
-        if (mult === -1) {
-            newNode.append('Crashed...');
-            newNode.style.background = '#aa4444';
-        } else if (mult === -2) {
-            newNode.append('Non Entry');
-        } else if (mult === -3) {
-            newNode.append('Canceled');
-        } else {
-            newNode.append('Failure!');
-            newNode.style.background = '#bb9944';
+        this.playerResultContainer.appendChild(newNode);
+        this.checkOverflow(this.playerResultContainer);
+    }
+
+    checkOverflow(container) {
+        if (container.children.length > this.maxNodes) {
+            container.removeChild(container.children[0]);
         }
     }
-    yourList.appendChild(newNode);
-    if (yourList.children.length > gameDisplayLimit) {
-        yourList.removeChild(yourList.children[0]);
-    }
-}
-
-function generateResult() {
-    var mult = crash.simulateResults();
-
-    addResult(mult);
-    resultAdded = true;
-    addYour(-2);
-
-    return Math.round(mult * 100) / 100;
 }
 
 class GameView {
     canvas;
+    vfx = [];
 
     constructor(canvasElement) {
         this.canvas = new CanvasRender(800, 600, canvasElement);
@@ -252,39 +280,48 @@ class GameView {
     drawFrame() {
         this.canvas.clear();
         this.canvas.drawBackground('#ffffaa');
-        if (!crash.crashed) this.drawMainShip(player.location.x, player.location.y);
-        if (player.exists) this.drawPlayer(player.x, player.y);
-        enemies.forEach(el => this.drawEnemy(player.location.x + el.row * player.location.padding, el.y));
-        var header = "";
-        if (crash.crashed) {
-            header = "Crashed At: ";
-        }
-        for (var i = vfx.length - 1; i >= 0; i--) {
-            vfx[i].update(this.canvas);
-            if (vfx[i].isComplete()) {
-                vfx.splice(i, 1);
+
+        // draw the game and any added vfx
+        mainController.game.draw(this.canvas);
+
+        for (var i = this.vfx.length - 1; i >= 0; i--) {
+            this.vfx[i].update(this.canvas);
+            if (this.vfx[i].isComplete) {
+                this.vfx.splice(i, 1);
             }
         }
-        this.canvas.addText(650, 40, `Crash Chance: ${crash.crashChance}%`, 12);
-        this.canvas.addText(650, 20, `Framerate: ${ticker.framerate.toFixed(2)}`, 12);
-        this.canvas.addText(650, 60, `Enemies Spawned: ${enemiesSpawned}`, 12);
-        this.canvas.addText(650, 80, `Bailout For: $${bailoutCash.toFixed(2)}`, 12);
-        this.canvas.addText(200, 200, `${header}Mult: x${crash.multiplier.toFixed(2)}`);
-        if (crash.crashed && autoToggle.checked) {
-            this.canvas.addText(200, 100, `Next run in: ${countdownTime}s`, 30);
+        
+        // main multiplier text
+        var header = "";
+        if (mainController.crash.crashed) {
+            header = "Crashed At: ";
         }
+
+        if (mainController.crash.crashed && footer.autoToggle.checked) {
+            this.canvas.addText(200, 100, `Next run in: ${Math.ceil(mainController.countdownTimer.delay / 1000 * 30)}s`, 30);
+        }
+
+        // stats corner
+        this.canvas.addText(650, 40, `Crash Chance: ${mainController.crash.crashChance}%`, 12);
+        this.canvas.addText(650, 20, `Framerate: ${mainController.ticker.framerate.toFixed(2)}`, 12);
+        this.canvas.addText(650, 60, `Bailout For: $${bailoutCash.toFixed(2)}`, 12);
+        this.canvas.addText(200, 200, `${header}Mult: x${mainController.crash.multiplier.toFixed(2)}`);
     }
-    
-    drawMainShip(x, y) {
-        this.canvas.drawCircle(x, y, 30, '#000000', '#00aaff');
+}
+
+class PlayerModel {
+    _Money = 0;
+    entryFee;
+
+    onMoneyChange;
+
+    get money() {
+        return this._Money;
     }
-    
-    drawPlayer(x, y) {
-        this.canvas.drawCircle(x, y, 10, '#000000', '#00ff00');
-    }
-    
-    drawEnemy(x, y) {
-        this.canvas.drawCircle(x, y, 15, '#000000', '#aa6666');
+
+    set money(amount) {
+        this._Money = amount;
+        this.onMoneyChange && this.onMoneyChange(amount);
     }
 }
 

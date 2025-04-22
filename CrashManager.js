@@ -1,4 +1,17 @@
 class CrashManager {
+    static simulateResults(count) {
+        var simulator = new CrashManager();
+
+        var results = [];
+
+        for (var i = 0; i < count; i++) {
+            simulator.fakeResult();
+            results.push(Math.round(simulator.multiplier * 100) / 100);
+        }
+        
+        return results;
+    }
+    
     multiplier = 0;
     crashed = false;
     crashChance = 0;
@@ -52,13 +65,11 @@ class CrashManager {
         }
     }
 
-    simulateResults() {
+    fakeResult() {
         this.reset();
-        while (!this.crashed) {
+        while(!this.crashed) {
             this.onTick();
         }
-
-        return this.multiplier;
     }
 }
 

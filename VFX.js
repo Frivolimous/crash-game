@@ -25,7 +25,7 @@ class Firework {
         }
     }
 
-    isComplete() {
+    get isComplete() {
         return this.particles.length === 0;
     }
 
@@ -83,7 +83,7 @@ class GrowingCircle {
         canvas.drawCircle(this.x, this.y, this.size, '#000000', this.color, this.alpha);
     }
 
-    isComplete() {
+    get isComplete() {
         return this.alpha <= 0;
     }
 }
@@ -114,7 +114,7 @@ class FlyingText {
         canvas.addText(this.x, this.y, this.text, this.size, this.color, this.alpha);
     }
 
-    isComplete() {
+    get isComplete() {
         return this.alpha <= 0;
     }
 }
@@ -150,7 +150,7 @@ class GrowingRing {
         canvas.drawRing(this.x, this.y, this.size, '#000000', this.color, this.alpha);
     }
 
-    isComplete() {
+    get isComplete() {
         return this.alpha <= 0;
     }
 }
