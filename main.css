@@ -29,6 +29,11 @@ body {
 }
 
 #player-money {
-    margin-left: 50px;
+    margin-left: 100px;
     font-size: 20px;
+    border: solid black 1px;
+    width: 170px;
+    display: inline-block;
+    text-align: center;
+    background: #ded;
 }

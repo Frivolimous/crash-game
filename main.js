@@ -83,7 +83,7 @@ function resetGame() {
 }
 
 function updatePlayerMoneyDisplay(money) {
-    playerMoneyDisplay.innerHTML = `$${money.toFixed(2)}`;
+    playerMoneyDisplay.innerHTML = `Balance: $${money.toFixed(2)}`;
 }
 
 function bailout() {
