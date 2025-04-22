@@ -25,14 +25,16 @@ class CanvasRender {
         this.Graphic.fill();
     }
     
-    drawCircle(x, y, radius, strokeColor, fillColor) {
+    drawCircle(x, y, radius, strokeColor, fillColor, alpha = 1) {
         this.Graphic.beginPath();
         this.Graphic.arc(x, y, radius, 0, 2 * Math.PI);
         this.Graphic.lineWidth = "3";
         this.Graphic.strokeStyle = strokeColor;
         this.Graphic.fillStyle = fillColor;
+        this.Graphic.globalAlpha = Math.max(alpha, 0);
         this.Graphic.fill();
         this.Graphic.stroke();
+        this.Graphic.globalAlpha = 1;
     }
 
     drawParticle(x, y, radius, fillColor, alpha) {

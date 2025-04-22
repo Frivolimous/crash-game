@@ -80,6 +80,7 @@ function bailout() {
     if (!crash.crashed && player.exists) {
         addYour(crash.multiplier);
         player.exists = false;
+        fireworks.push(new GrowingCircle(player.location.x + player.location.padding * player.position, player.location.y, '#00ff00', 10, 1, 0.01))
         playerMoney += crash.multiplier;
         updatePlayerMoneyDisplay(playerMoney);
     }
