@@ -65,6 +65,7 @@ var simulateResults = (count) =>{
 }
 
 function resetGame() {
+    if (!crash.crashed) addResult(-1);
     crash.reset();
     resultAdded = false;
     enemyDelay = 1;
@@ -193,19 +194,23 @@ function drawEnemy(x, y) {
 function addResult(mult) {
     let newNode = document.createElement('div');
     newNode.classList.add('result-entry');
-    newNode.append(`Crash: x${mult.toPrecision(3)}`);
-    if (mult < 1) {
-        newNode.style.background = '#ffcccc';
-    } else if (mult < 2) {
-        newNode.style.background = '#dddddd';
-    } else if (mult < 4) {
-        newNode.style.background = '#d0d0ee';
-    } else if (mult < 6) {
-        newNode.style.background = '#ccccff';
-    } else if (mult < 10) {
-        newNode.style.background = '#bbbbff';
+    if (mult <0) {
+        newNode.append('Run Canceled');
     } else {
-        newNode.style.background = '#ccaaff';
+        newNode.append(`Crash: x${mult.toPrecision(3)}`);
+        if (mult < 1) {
+            newNode.style.background = '#ffcccc';
+        } else if (mult < 2) {
+            newNode.style.background = '#dddddd';
+        } else if (mult < 4) {
+            newNode.style.background = '#d0d0ee';
+        } else if (mult < 6) {
+            newNode.style.background = '#ccccff';
+        } else if (mult < 10) {
+            newNode.style.background = '#bbbbff';
+        } else {
+            newNode.style.background = '#ccaaff';
+        }
     }
     resultList.appendChild(newNode);
     if (resultList.children.length > gameDisplayLimit) {
@@ -240,6 +245,7 @@ function generateResult() {
     var mult = crash.simulateResults();
 
     addResult(mult);
+    resultAdded = true;
     addYour(-2);
 }
 
