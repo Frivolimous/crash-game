@@ -8,7 +8,7 @@ class CrashManager {
     baseMult = 1;
     incMult = 0.1;
 
-    tickCheck = false;
+    tickCheck = true;
     maxIndex = 0;
 
     reset = () => {

@@ -56,12 +56,15 @@ function removePlayer() {
 }
 
 var simulateResults = (count) =>{
+    var results = [];
     console.log('count', count);
     var money = playerMoney;
     for (var i = 0; i < count; i++) {
-        generateResult();
+        results.push(generateResult());
     }
     playerMoney = money;
+
+    return JSON.stringify(results);
 }
 
 function resetGame() {
@@ -247,6 +250,8 @@ function generateResult() {
     addResult(mult);
     resultAdded = true;
     addYour(-2);
+
+    return mult;
 }
 
 
