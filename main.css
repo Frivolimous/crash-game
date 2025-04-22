@@ -6,7 +6,7 @@ body {
 
 #main {
     display: grid;
-    grid-template-columns: 1fr 150px 150px;
+    grid-template-columns: 850px 150px 150px;
     height: 100vh;
 }
 
@@ -26,4 +26,9 @@ body {
     text-align: center;
     font-weight: bold;
     border-radius: 10px;
+}
+
+#player-money {
+    margin-left: 30px;
+    font-size: 20px;
 }

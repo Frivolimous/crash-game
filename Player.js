@@ -20,15 +20,15 @@ class Player {
 
     keyDown = (e) => {
         switch(e.key.toLowerCase()) {
-            case 'a': this.leftButton = true; break;
-            case 'd': this.rightButton = true; break;
+            case 'a': case 'arrowleft': this.leftButton = true; break;
+            case 'd': case 'arrowright': this.rightButton = true; break;
         }
     }
     
     keyUp = (e) => {
         switch(e.key.toLowerCase()) {
-            case 'a': this.leftButton = false; break;
-            case 'd': this.rightButton = false; break;
+            case 'a': case 'arrowleft': this.leftButton = false; break;
+            case 'd': case 'arrowright': this.rightButton = false; break;
         }
     }
 

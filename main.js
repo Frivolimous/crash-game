@@ -22,23 +22,32 @@ var gameDisplayLimit = 30;
 
 mainButton.addEventListener('click', resetGame);
 autoToggle.addEventListener('click', onAutoToggle);
+document.getElementById('bail-button').addEventListener('click', bailout);
+document.getElementById('gen-button').addEventListener('click', () => simulateResults(30));
+
 window.addEventListener('keydown', (e) => {
     switch(e.key.toLowerCase()) {
         case 'p': resetGame(); break;
         case ' ': bailout(); break;
     }
-})
+});
 
 function init() {
     ticker.onTick = onTick;
     ticker.start();
     autoToggle.checked = true;
     resetGame();
-    for (var i = 0; i < 10; i++) {
+    simulateResults(10);
+    resetGame();
+}
+
+var simulateResults = (count) =>{
+    console.log('count', count);
+    var money = playerMoney;
+    for (var i = 0; i < count; i++) {
         generateResult();
     }
-    playerMoney = 100;
-    resetGame();
+    playerMoney = money;
 }
 
 function resetGame() {
