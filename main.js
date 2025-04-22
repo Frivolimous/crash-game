@@ -1,3 +1,4 @@
+var entryFeeText = document.getElementById('entry-fee');
 var mainButton = document.getElementById('sim-button');
 var resultList = document.getElementById('result-list');
 var yourList = document.getElementById('your-list');
@@ -5,7 +6,6 @@ var autoToggle = document.getElementById('auto-toggle');
 var autoBail = document.getElementById('auto-bail-check');
 var autoBailText = document.getElementById('auto-bail-text');
 var playerMoneyDisplay = document.getElementById('player-money');
-var canvas = new CanvasRender(800, 600, document.getElementById('main-canvas'));
 var ticker = new JMTicker(30);
 var player = new Player(400, 500, 100);
 var enemies = [];
@@ -23,6 +23,9 @@ var playerMoney = 100;
 var gameDisplayLimit = 30;
 var enemiesSpawned = 0;
 var bailoutCash = 0;
+var entryFee = 0;
+
+var view;
 
 mainButton.addEventListener('click', resetGame);
 autoToggle.addEventListener('click', onAutoToggle);
@@ -37,6 +40,8 @@ window.addEventListener('keydown', (e) => {
 });
 
 function init() {
+    view = new GameView(document.getElementById('main-canvas'));
+
     ticker.onTick = onTick;
     ticker.start();
     autoToggle.checked = true;
@@ -172,45 +177,7 @@ var onTick = () => {
         }
     }
 
-    drawFrame();
-}
-
-function drawFrame() {
-    canvas.clear();
-    canvas.drawBackground('#ffffaa');
-    if (!crash.crashed) drawMainShip(player.location.x, player.location.y);
-    if (player.exists) drawPlayer(player.x, player.y);
-    enemies.forEach(el => drawEnemy(player.location.x + el.row * player.location.padding, el.y));
-    var header = "";
-    if (crash.crashed) {
-        header = "Crashed At: ";
-    }
-    for (var i = vfx.length - 1; i >= 0; i--) {
-        vfx[i].update(canvas);
-        if (vfx[i].isComplete()) {
-            vfx.splice(i, 1);
-        }
-    }
-    canvas.addText(650, 40, `Crash Chance: ${crash.crashChance}%`, 12);
-    canvas.addText(650, 20, `Framerate: ${ticker.framerate.toFixed(2)}`, 12);
-    canvas.addText(650, 60, `Enemies Spawned: ${enemiesSpawned}`, 12);
-    canvas.addText(650, 80, `Bailout For: $${bailoutCash.toFixed(2)}`, 12);
-    canvas.addText(200, 200, `${header}Mult: x${crash.multiplier.toFixed(2)}`);
-    if (crash.crashed && autoToggle.checked) {
-        canvas.addText(200, 100, `Next run in: ${countdownTime}s`, 30);
-    }
-}
-
-function drawMainShip(x, y) {
-    canvas.drawCircle(x, y, 30, '#000000', '#00aaff');
-}
-
-function drawPlayer(x, y) {
-    canvas.drawCircle(x, y, 10, '#000000', '#00ff00');
-}
-
-function drawEnemy(x, y) {
-    canvas.drawCircle(x, y, 15, '#000000', '#aa6666');
+    view.drawFrame();
 }
 
 function addResult(mult) {
@@ -275,6 +242,50 @@ function generateResult() {
     return Math.round(mult * 100) / 100;
 }
 
+class GameView {
+    canvas;
 
+    constructor(canvasElement) {
+        this.canvas = new CanvasRender(800, 600, canvasElement);
+    }
+
+    drawFrame() {
+        this.canvas.clear();
+        this.canvas.drawBackground('#ffffaa');
+        if (!crash.crashed) this.drawMainShip(player.location.x, player.location.y);
+        if (player.exists) this.drawPlayer(player.x, player.y);
+        enemies.forEach(el => this.drawEnemy(player.location.x + el.row * player.location.padding, el.y));
+        var header = "";
+        if (crash.crashed) {
+            header = "Crashed At: ";
+        }
+        for (var i = vfx.length - 1; i >= 0; i--) {
+            vfx[i].update(this.canvas);
+            if (vfx[i].isComplete()) {
+                vfx.splice(i, 1);
+            }
+        }
+        this.canvas.addText(650, 40, `Crash Chance: ${crash.crashChance}%`, 12);
+        this.canvas.addText(650, 20, `Framerate: ${ticker.framerate.toFixed(2)}`, 12);
+        this.canvas.addText(650, 60, `Enemies Spawned: ${enemiesSpawned}`, 12);
+        this.canvas.addText(650, 80, `Bailout For: $${bailoutCash.toFixed(2)}`, 12);
+        this.canvas.addText(200, 200, `${header}Mult: x${crash.multiplier.toFixed(2)}`);
+        if (crash.crashed && autoToggle.checked) {
+            this.canvas.addText(200, 100, `Next run in: ${countdownTime}s`, 30);
+        }
+    }
+    
+    drawMainShip(x, y) {
+        this.canvas.drawCircle(x, y, 30, '#000000', '#00aaff');
+    }
+    
+    drawPlayer(x, y) {
+        this.canvas.drawCircle(x, y, 10, '#000000', '#00ff00');
+    }
+    
+    drawEnemy(x, y) {
+        this.canvas.drawCircle(x, y, 15, '#000000', '#aa6666');
+    }
+}
 
 init();
