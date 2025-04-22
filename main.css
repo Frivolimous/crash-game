@@ -1,0 +1,29 @@
+body {
+    margin: 0px;
+    overflow: hidden;
+    color: var(--color-text);
+}
+
+#main {
+    display: grid;
+    grid-template-columns: 1fr 150px 150px;
+    height: 100vh;
+}
+
+#left-column {
+    grid-row: 1;
+}
+
+#right-column {
+    grid-row: 1;
+}
+
+.result-entry {
+    background: lightgrey;
+    border: solid #111 2px;
+    margin: 2px;
+    width: 100px;
+    text-align: center;
+    font-weight: bold;
+    border-radius: 10px;
+}

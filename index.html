@@ -1,0 +1,33 @@
+<header>
+    <link rel="stylesheet" href="main.css">
+</header>
+
+<body>
+    <div id="main">
+        <div id="left-column">
+            <canvas id = "main-canvas"></canvas>
+            <br>
+            <button id="sim-button">New Run (P)</button><input type="checkbox" id="auto-toggle">Auto-Start</input>
+            <br>
+            <button id="bail-button">Bailout (Space)</button>
+        </div>
+        <div id="right-column">
+            <div>---</div>
+            <div id="result-header">Main Results:</div>
+            <div id="result-list"></div>
+        </div>
+        <div id="right-column">
+            <div id="player-money">$10.00</div>
+            <div id="your-header">Your Results:</div>
+            <div id="your-list"></div>
+        </div>
+    </div>
+    
+</body>
+
+<script src="CrashManager.js"></script>
+<script src="JMTicker.js"></script>
+<script src="Player.js"></script>
+<script src="Enemy.js"></script>
+<script src="CanvasRender.js"></script>
+<script src="main.js"></script>
