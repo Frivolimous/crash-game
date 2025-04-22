@@ -10,6 +10,14 @@ class Player {
         padding: 0
     }
 
+    get x() {
+        return this.location.x + this.location.padding * this.position;
+    }
+
+    get y() {
+        return this.location.y;
+    }
+
     constructor(x, y, padding) {
         this.location.x = x;
         this.location.y = y;

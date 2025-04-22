@@ -1,4 +1,3 @@
-var mainDiv = document.getElementById('main-div');
 var mainButton = document.getElementById('sim-button');
 var resultList = document.getElementById('result-list');
 var yourList = document.getElementById('your-list');
@@ -10,7 +9,7 @@ var canvas = new CanvasRender(800, 600, document.getElementById('main-canvas'));
 var ticker = new JMTicker(30);
 var player = new Player(400, 500, 100);
 var enemies = [];
-var fireworks = [];
+var vfx = [];
 var crash = new CrashManager();
 var resultAdded = false;
 var countdownTime = -1;
@@ -40,6 +39,8 @@ function init() {
     ticker.start();
     autoToggle.checked = true;
     simulateResults(10);
+    countdownTime = 5;
+    countdownDelay = 1000 / 30;
 }
 
 function playerJoin() {
@@ -69,6 +70,7 @@ var simulateResults = (count) =>{
 
 function resetGame() {
     if (!crash.crashed) addResult(-1);
+    if (player.exists) addYour(-3);
     crash.reset();
     resultAdded = false;
     enemyDelay = 1;
@@ -84,7 +86,11 @@ function bailout() {
     if (!crash.crashed && player.exists) {
         addYour(crash.multiplier);
         player.exists = false;
-        fireworks.push(new GrowingCircle(player.location.x + player.location.padding * player.position, player.location.y, '#00ff00', 10, 1, 0.01))
+        vfx.push(new GrowingCircle(player.x, player.y, '#00ff00', 10, 1, 0.01));
+        vfx.push(new FlyingText(player.x, player.y, 'Bailout!', '#000000', 10, 1.5, 0.03));
+        vfx.push(new GrowingRing(player.x, player.y, '#44ff77', 1, 3, 0.1, 0));
+        vfx.push(new GrowingRing(player.x, player.y, '#44ff77', 1, 3, 0.1, 6));
+        vfx.push(new GrowingRing(player.x, player.y, '#44ff77', 1, 3, 0.1, 12));
         playerMoney += crash.multiplier;
         updatePlayerMoneyDisplay(playerMoney);
     }
@@ -106,10 +112,10 @@ var onTick = () => {
                 addYour(-1);
             }
             addResult(crash.multiplier);
-            fireworks.push(new Firework(player.location.x, player.location.y, 20, '#00aaff', 2));
+            vfx.push(new Firework(player.location.x, player.location.y, 20, '#00aaff', 2));
             if (player.exists) {
                 player.exists = false;
-                fireworks.push(new Firework(player.location.x + player.position * player.location.padding, player.location.y, 10, '#00ff00', 1));
+                vfx.push(new Firework(player.x, player.y, 10, '#00ff00', 1));
             }
             countdownTime = 5;
             countdownDelay = 1000 / 30;
@@ -148,7 +154,7 @@ var onTick = () => {
             if (player.exists && el.collisionTest(player)) {
                 player.exists = false;
                 addYour(0);
-                fireworks.push(new Firework(player.location.x + player.position * player.location.padding, player.location.y, 10, '#00ff00', 1));
+                vfx.push(new Firework(player.x, player.y, 10, '#00ff00', 1));
             }
             if (el.toDestroy) {
                 enemies.splice(i, 1);
@@ -163,19 +169,19 @@ function drawFrame() {
     canvas.clear();
     canvas.drawBackground('#ffffaa');
     if (!crash.crashed) drawMainShip(player.location.x, player.location.y);
-    if (player.exists) drawPlayer(player.location.x + player.position * player.location.padding, player.location.y);
+    if (player.exists) drawPlayer(player.x, player.y);
     enemies.forEach(el => drawEnemy(player.location.x + el.row * player.location.padding, el.y));
     var header = "";
     if (crash.crashed) {
         header = "Crashed At: ";
     }
-    for (var i = fireworks.length - 1; i >= 0; i--) {
-        fireworks[i].update(canvas);
-        if (fireworks[i].isComplete()) {
-            fireworks.splice(i, 1);
+    for (var i = vfx.length - 1; i >= 0; i--) {
+        vfx[i].update(canvas);
+        if (vfx[i].isComplete()) {
+            vfx.splice(i, 1);
         }
     }
-    if (!crash.crashed) canvas.addText(250, 150, `Crash Chance: ${crash.crashChance}%`, 15);
+    if (!crash.crashed) canvas.addText(650, 20, `Crash Chance: ${crash.crashChance}%`, 12);
     canvas.addText(200, 200, `${header}Mult: x${crash.multiplier.toFixed(2)}`);
     if (crash.crashed && autoToggle.checked) {
         canvas.addText(200, 100, `Next run in: ${countdownTime}s`, 30);
@@ -197,7 +203,7 @@ function drawEnemy(x, y) {
 function addResult(mult) {
     let newNode = document.createElement('div');
     newNode.classList.add('result-entry');
-    if (mult <0) {
+    if (mult < 0) {
         newNode.append('Run Canceled');
     } else {
         newNode.append(`Crash: x${mult.toPrecision(3)}`);
@@ -233,6 +239,8 @@ function addYour(mult) {
             newNode.style.background = '#aa4444';
         } else if (mult === -2) {
             newNode.append('Non Entry');
+        } else if (mult === -3) {
+            newNode.append('Canceled');
         } else {
             newNode.append('Failure!');
             newNode.style.background = '#bb9944';

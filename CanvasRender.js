@@ -37,6 +37,18 @@ class CanvasRender {
         this.Graphic.globalAlpha = 1;
     }
 
+    drawRing(x, y, radius, strokeColor, fillColor, alpha = 1) {
+        this.Graphic.beginPath();
+        this.Graphic.arc(x, y, radius, 0, 2 * Math.PI);
+        this.Graphic.lineWidth = "10";
+        this.Graphic.strokeStyle = fillColor;
+        // this.Graphic.fillStyle = fillColor;
+        this.Graphic.globalAlpha = Math.max(alpha, 0);
+        // this.Graphic.fill();
+        this.Graphic.stroke();
+        this.Graphic.globalAlpha = 1;
+    }
+
     drawParticle(x, y, radius, fillColor, alpha) {
         this.Graphic.beginPath();
         this.Graphic.arc(x, y, radius, 0, 2 * Math.PI);
@@ -49,9 +61,11 @@ class CanvasRender {
         this.Graphic.globalAlpha = 1;
     }
     
-    addText(x, y, text, size = 50) {
+    addText(x, y, text, size = 50, color = '#000000', alpha = 1) {
         this.Graphic.font = `${size}px Arial`;
-        this.Graphic.fillStyle = '#000000';
+        this.Graphic.fillStyle = color;
+        this.Graphic.globalAlpha = Math.max(alpha, 0);
         this.Graphic.fillText(text, x, y);
+        this.globalAlpha = 1;
     }
 }

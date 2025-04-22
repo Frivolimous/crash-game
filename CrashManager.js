@@ -8,7 +8,7 @@ class CrashManager {
     baseMult = 1;
     incMult = 0.1;
 
-    tickCheck = true;
+    tickCheck = false;
     maxIndex = 0;
 
     reset = () => {
@@ -22,7 +22,7 @@ class CrashManager {
             var value = Math.random();
             for (var i = 0; i < CrashChances.length / 4; i++) {
                 if (value < CrashChances[i * 4 + 3] / 100) {
-                    this.maxIndex = i;
+                    this.maxIndex = i + 1;
                     break;
                 }
             }
@@ -35,7 +35,7 @@ class CrashManager {
         this.iterator++;
         if (this.iterator >= CrashChances.length / 4) this.crashed = true;
         else {
-            var index = CrashChances[this.iterator * 4];
+            // var index = CrashChances[this.iterator * 4];
             var crashChance = CrashChances[this.iterator * 4 + 2] / 100;
             this.crashChance = CrashChances[this.iterator * 4 + 3];
             this.multiplier = CrashChances[this.iterator * 4 + 1];
