@@ -4,6 +4,8 @@ class JMTicker {
     tickDelay = 30;
     lastTime = 0;
     tickInc = 0;
+    framerate = 0;
+    lastTickTime = 0;
 
     onTick;
 
@@ -25,6 +27,8 @@ class JMTicker {
         if (this.tickInc > this.tickDelay) {
             this.tickInc -= this.tickDelay;
             if (this.onTick) this.onTick();
+            this.framerate = 1000 / (time - this.lastTickTime);
+            this.lastTickTime = time;
         }
 
         requestAnimationFrame(this.onFrame);

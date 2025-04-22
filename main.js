@@ -21,6 +21,8 @@ var minSpeed = 10;
 var incSpeed = 10;
 var playerMoney = 100;
 var gameDisplayLimit = 30;
+var enemiesSpawned = 0;
+var bailoutCash = 0;
 
 mainButton.addEventListener('click', resetGame);
 autoToggle.addEventListener('click', onAutoToggle);
@@ -41,6 +43,7 @@ function init() {
     simulateResults(10);
     countdownTime = 5;
     countdownDelay = 1000 / 30;
+    updatePlayerMoneyDisplay(playerMoney);
 }
 
 function playerJoin() {
@@ -75,6 +78,7 @@ function resetGame() {
     resultAdded = false;
     enemyDelay = 1;
     enemies = [];
+    enemiesSpawned = 0;
     playerJoin();
 }
 
@@ -102,6 +106,7 @@ function onAutoToggle() {
 
 function addEnemy(row) {
     enemies.push(new Enemy(minSpeed + Math.random() * incSpeed, row, 600));
+    enemiesSpawned++;
 }
 
 var onTick = () => {
@@ -135,6 +140,10 @@ var onTick = () => {
     } else {
         player.update();
         crash.onTick();
+
+        if (player.exists) {
+            bailoutCash = crash.multiplier;
+        }
 
         if (autoBail.checked) {
             if (crash.multiplier >= Number(autoBailText.value)) {
@@ -181,7 +190,10 @@ function drawFrame() {
             vfx.splice(i, 1);
         }
     }
-    if (!crash.crashed) canvas.addText(650, 20, `Crash Chance: ${crash.crashChance}%`, 12);
+    canvas.addText(650, 40, `Crash Chance: ${crash.crashChance}%`, 12);
+    canvas.addText(650, 20, `Framerate: ${ticker.framerate.toFixed(2)}`, 12);
+    canvas.addText(650, 60, `Enemies Spawned: ${enemiesSpawned}`, 12);
+    canvas.addText(650, 80, `Bailout For: $${bailoutCash.toFixed(2)}`, 12);
     canvas.addText(200, 200, `${header}Mult: x${crash.multiplier.toFixed(2)}`);
     if (crash.crashed && autoToggle.checked) {
         canvas.addText(200, 100, `Next run in: ${countdownTime}s`, 30);
