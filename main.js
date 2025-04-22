@@ -271,7 +271,7 @@ function generateResult() {
     resultAdded = true;
     addYour(-2);
 
-    return mult;
+    return Math.round(mult * 100) / 100;
 }
 
 
