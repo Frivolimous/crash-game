@@ -23,9 +23,13 @@ body {
     border: solid #111 2px;
     margin: 2px;
     width: 100px;
+    height: 19px;
     text-align: center;
     font-weight: bold;
+    font-size: 0.8em;
     border-radius: 10px;
+    line-height: 19px;
+    text-wrap-mode: nowrap;
 }
 
 #player-money {

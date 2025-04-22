@@ -48,14 +48,15 @@ function init() {
 
 function playerJoin() {
     player.exists = true;
-    playerMoney--;
+    entryFee = Number(entryFeeText.value);
+    playerMoney -= entryFee;
     updatePlayerMoneyDisplay(playerMoney);
 }
 
 function removePlayer() {
     addYour(-2);
     player.exists = false;
-    playerMoney++;
+    playerMoney += entryFee;
     updatePlayerMoneyDisplay(playerMoney);
 }
 
@@ -88,14 +89,14 @@ function updatePlayerMoneyDisplay(money) {
 
 function bailout() {
     if (!crash.crashed && player.exists) {
-        addYour(crash.multiplier);
+        addYour(crash.multiplier * entryFee);
         player.exists = false;
         vfx.push(new GrowingCircle(player.x, player.y, '#00ff00', 10, 1, 0.01));
         vfx.push(new FlyingText(player.x, player.y, 'Bailout!', '#000000', 10, 1.5, 0.03));
         vfx.push(new GrowingRing(player.x, player.y, '#44ff77', 1, 3, 0.1, 0));
         vfx.push(new GrowingRing(player.x, player.y, '#44ff77', 1, 3, 0.1, 6));
         vfx.push(new GrowingRing(player.x, player.y, '#44ff77', 1, 3, 0.1, 12));
-        playerMoney += crash.multiplier;
+        playerMoney += crash.multiplier * entryFee;
         updatePlayerMoneyDisplay(playerMoney);
     }
 }
@@ -142,7 +143,7 @@ var onTick = () => {
         crash.onTick();
 
         if (player.exists) {
-            bailoutCash = crash.multiplier;
+            bailoutCash = crash.multiplier * entryFee;
         }
 
         if (autoBail.checked) {

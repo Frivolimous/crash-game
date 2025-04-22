@@ -11,10 +11,10 @@
             <br>
             <button id="bail-button">Bailout (Space)</button>
             <br>
-            <input id="auto-bail-text" type="number" min="1.0" value="5.00" step="0.01" onChange="value = Number(value).toFixed(2)"></input>
+            <input id="auto-bail-text" type="number" min="1.0" value="5.00" step="0.01" onChange="value = Number(value).toFixed(2)" />
             <input id="auto-bail-check" type="checkbox">Auto-Bail</input>
             <br><br>
-            Entry Fee: <input value="$1.00" disabled style="width:60px"></input><span id="player-money">$10.00</span>
+            Entry Fee: $<input id="entry-fee" type="number" min = "1.00" step="0.01" value="1.00" style="width:60px" onChange="value = Number(value).toFixed(2)" /><span id="player-money">$10.00</span>
             <br>
             <button disabled>Join Next Run</button><input type="checkbox" checked disabled>Auto-Join</input>
             <br>
