@@ -3,6 +3,8 @@ var mainButton = document.getElementById('sim-button');
 var resultList = document.getElementById('result-list');
 var yourList = document.getElementById('your-list');
 var autoToggle = document.getElementById('auto-toggle');
+var autoBail = document.getElementById('auto-bail-check');
+var autoBailText = document.getElementById('auto-bail-text');
 var playerMoneyDisplay = document.getElementById('player-money');
 var canvas = new CanvasRender(800, 600, document.getElementById('main-canvas'));
 var ticker = new JMTicker(30);
@@ -37,9 +39,20 @@ function init() {
     ticker.onTick = onTick;
     ticker.start();
     autoToggle.checked = true;
-    resetGame();
     simulateResults(10);
-    resetGame();
+}
+
+function playerJoin() {
+    player.exists = true;
+    playerMoney--;
+    updatePlayerMoneyDisplay(playerMoney);
+}
+
+function removePlayer() {
+    addYour(-2);
+    player.exists = false;
+    playerMoney++;
+    updatePlayerMoneyDisplay(playerMoney);
 }
 
 var simulateResults = (count) =>{
@@ -53,12 +66,10 @@ var simulateResults = (count) =>{
 
 function resetGame() {
     crash.reset();
-    player.exists = true;
     resultAdded = false;
     enemyDelay = 1;
     enemies = [];
-    playerMoney--;
-    updatePlayerMoneyDisplay(playerMoney);
+    playerJoin();
 }
 
 function updatePlayerMoneyDisplay(money) {
@@ -91,6 +102,10 @@ var onTick = () => {
             }
             addResult(crash.multiplier);
             fireworks.push(new Firework(player.location.x, player.location.y, 20, '#00aaff', 2));
+            if (player.exists) {
+                player.exists = false;
+                fireworks.push(new Firework(player.location.x + player.position * player.location.padding, player.location.y, 10, '#00ff00', 1));
+            }
             countdownTime = 5;
             countdownDelay = 1000 / 30;
         }
@@ -109,6 +124,12 @@ var onTick = () => {
     } else {
         player.update();
         crash.onTick();
+
+        if (autoBail.checked) {
+            if (crash.multiplier >= Number(autoBailText.value)) {
+                bailout();
+            }
+        }
     
         enemyDelay--;
         if (enemyDelay <= 0) {
@@ -149,9 +170,10 @@ function drawFrame() {
             fireworks.splice(i, 1);
         }
     }
+    if (!crash.crashed) canvas.addText(250, 150, `Crash Chance: ${crash.crashChance}%`, 15);
     canvas.addText(200, 200, `${header}Mult: x${crash.multiplier.toFixed(2)}`);
     if (crash.crashed && autoToggle.checked) {
-        canvas.addText(200, 100, `Next run in: ${countdownTime}s`);
+        canvas.addText(200, 100, `Next run in: ${countdownTime}s`, 30);
     }
 }
 

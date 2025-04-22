@@ -47,8 +47,8 @@ class CanvasRender {
         this.Graphic.globalAlpha = 1;
     }
     
-    addText(x, y, text) {
-        this.Graphic.font = "50px Arial";
+    addText(x, y, text, size = 50) {
+        this.Graphic.font = `${size}px Arial`;
         this.Graphic.fillStyle = '#000000';
         this.Graphic.fillText(text, x, y);
     }
