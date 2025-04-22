@@ -34,6 +34,18 @@ class CanvasRender {
         this.Graphic.fill();
         this.Graphic.stroke();
     }
+
+    drawParticle(x, y, radius, fillColor, alpha) {
+        this.Graphic.beginPath();
+        this.Graphic.arc(x, y, radius, 0, 2 * Math.PI);
+        this.Graphic.lineWidth = "1";
+        this.Graphic.strokeStyle = '#000000';
+        this.Graphic.globalAlpha = Math.max(alpha, 0);
+        this.Graphic.fillStyle = fillColor;
+        this.Graphic.fill();
+        this.Graphic.stroke();
+        this.Graphic.globalAlpha = 1;
+    }
     
     addText(x, y, text) {
         this.Graphic.font = "50px Arial";

@@ -8,6 +8,7 @@ var canvas = new CanvasRender(800, 600, document.getElementById('main-canvas'));
 var ticker = new JMTicker(30);
 var player = new Player(400, 500, 100);
 var enemies = [];
+var fireworks = [];
 var crash = new CrashManager();
 var resultAdded = false;
 var countdownTime = -1;
@@ -89,6 +90,7 @@ var onTick = () => {
                 addYour(-1);
             }
             addResult(crash.multiplier);
+            fireworks.push(new Firework(player.location.x, player.location.y, 20, '#00aaff', 2));
             countdownTime = 5;
             countdownDelay = 1000 / 30;
         }
@@ -120,6 +122,7 @@ var onTick = () => {
             if (player.exists && el.collisionTest(player)) {
                 player.exists = false;
                 addYour(0);
+                fireworks.push(new Firework(player.location.x + player.position * player.location.padding, player.location.y, 10, '#00ff00', 1));
             }
             if (el.toDestroy) {
                 enemies.splice(i, 1);
@@ -133,12 +136,18 @@ var onTick = () => {
 function drawFrame() {
     canvas.clear();
     canvas.drawBackground('#ffffaa');
-    drawMainShip(player.location.x, player.location.y);
+    if (!crash.crashed) drawMainShip(player.location.x, player.location.y);
     if (player.exists) drawPlayer(player.location.x + player.position * player.location.padding, player.location.y);
     enemies.forEach(el => drawEnemy(player.location.x + el.row * player.location.padding, el.y));
     var header = "";
     if (crash.crashed) {
         header = "Crashed At: ";
+    }
+    for (var i = fireworks.length - 1; i >= 0; i--) {
+        fireworks[i].update(canvas);
+        if (fireworks[i].isComplete()) {
+            fireworks.splice(i, 1);
+        }
     }
     canvas.addText(200, 200, `${header}Mult: x${crash.multiplier.toFixed(2)}`);
     if (crash.crashed && autoToggle.checked) {
