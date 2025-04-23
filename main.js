@@ -52,8 +52,8 @@ function init() {
             case 'p': mainController.reset(); break;
             case ' ': mainController.bailout(); break;
             case 'c': mainController.crash.crashed = true; break;
-            case '1': selectGame(1); break;
-            case '0': selectGame(0); break;
+            // case '1': selectGame(1); break;
+            // case '0': selectGame(0); break;
         }
     });
 
