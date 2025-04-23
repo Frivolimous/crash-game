@@ -1,19 +1,31 @@
-@media screen and (max-width: 900px) {
+@media (max-width: 1000px) {
     body {
         margin: 0px;
         overflow: hidden;
+        font-size: 1.5vh;
+    }
+
+    .ui-button {
+        font-size: 1em;
+    }
+
+    .ui-check {
+        scale: 2;
+    }
+
+    .ui-input {
+        font-size: 1em;
     }
     
     #main {
         display: grid;
-        grid-template-rows: minmax(1px, auto) 1fr 1fr 1fr;
+        grid-template-rows: minmax(1px, auto) 5em 5em 1fr;
         height: 100vh;
     }
 
     #main-canvas {
-        height: 100%;
-        max-width: 100%;
-        border: solid 1px black;
+        width: 100%;
+        border: solid 0.1em black;
     }
     
     #left-column {
@@ -61,33 +73,36 @@
         justify-content: right;
         width: fit-content;
     }
+
+    #entry-fee {
+        width: 4em;
+    }
     
     .result-entry {
         background: lightgrey;
-        border: solid #111 2px;
-        margin: 2px;
-        width: 50px;
-        height: 40px;
+        border: solid #111 0.1em;
+        margin: 0.1em;
+        width: 3.5em;
+        height: 2.5em;
         text-align: center;
         font-weight: bold;
-        font-size: 0.8em;
-        border-radius: 10px;
-        line-height: 19px;
+        border-radius: 0.8em;
+        line-height: 1em;
         align-content: center;
     }
     
     #player-money {
-        margin-left: 100px;
-        font-size: 20px;
-        border: solid black 1px;
-        width: 170px;
+        margin-left: 4em;
+        font-size: 1.2em;
+        border: solid black 0.2px;
+        width: 9em;
         display: inline-block;
         text-align: center;
         background: #ded;
     }
 }
 
-@media screen and (min-width: 900px) {
+@media (min-width: 1000px) {
     body {
         margin: 0px;
         overflow: hidden;
@@ -107,6 +122,10 @@
     
     #left-column {
         grid-row: 1;
+    }
+
+    #entry-fee {
+        width: 60px;
     }
     
     #result-column {

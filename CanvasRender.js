@@ -6,6 +6,7 @@ class CanvasRender {
     
     onPointerDown;
     onPointerUp;
+    onPointerUpAnywhere;
 
     constructor(width, height, element) {
         this.Element = element;
@@ -29,6 +30,12 @@ class CanvasRender {
             var location = {x: e.offsetX * element.width / r.width, y: e.offsetY * element.height / r.height};
             this.onPointerUp && this.onPointerUp(location);
         });
+
+        element.addEventListener('pointerleave', e => {
+            this.onPointerUpAnywhere && this.onPointerUpAnywhere();
+
+            console.log(e);
+        })
     }
 
     clear() {

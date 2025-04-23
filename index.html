@@ -18,20 +18,20 @@
         </div>
         <div id = "footer">
             <div id = "instructions-text"></div>
-            <button id="bail-button">Bailout (Space)</button>
+            <button class="ui-button" id="bail-button">Bailout (Space)</button>
             <br>
-            <input id="auto-bail-text" type="number" min="1.0" value="5.00" step="0.01" onChange="value = Number(value).toFixed(2)" />
-            <input id="auto-bail-check" type="checkbox">Auto-Bail</input>
+            <input class="ui-input" id="auto-bail-text" type="number" min="1.0" value="5.00" step="0.01" onChange="value = Number(value).toFixed(2)" />
+            <input class="ui-check" id="auto-bail-check" type="checkbox">Auto-Bail</input>
             <br><br>
-            Entry Fee: $<input id="entry-fee" type="number" min = "1.00" step="0.01" value="1.00" style="width:60px" onChange="value = Number(value).toFixed(2)" /><span id="player-money">$10.00</span>
+            Entry Fee: $<input class="ui-input" id="entry-fee" type="number" min = "1.00" step="0.01" value="1.00" onChange="value = Number(value).toFixed(2)" /><span id="player-money">$10.00</span>
             <br>
-            <button id="join-button" disabled>Join Next Run</button><input type="checkbox" id="auto-join-check" checked>Auto-Join</input>
+            <button class="ui-button" id="join-button" disabled>Join Next Run</button><input class="ui-check" type="checkbox" id="auto-join-check" checked>Auto-Join</input>
             <br>
             <br>
             <br>
-            <button id="sim-button">New Run (P)</button><input type="checkbox" id="auto-toggle" checked>Auto-Start</input>
+            <button class="ui-button" id="sim-button">New Run (P)</button><input class="ui-check" type="checkbox" id="auto-toggle" checked>Auto-Start</input>
             <br>
-            <button id="gen-button">Fake Results</button>
+            <button class="ui-button" id="gen-button">Fake Results</button>
         </div>
     </div>
     

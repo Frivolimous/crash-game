@@ -29,7 +29,7 @@ class GameBasic {
         this.enemyTimer = new Timer(this.enemyConfig.minDelay, this.enemyConfig.incDelay);
 
         canvasView.canvas.onPointerDown = e => {
-            canvasView.vfx.push(new GrowingRing(e.x, e.y, '#666600', 1, 3, 0.3, 0));
+            canvasView.vfx.push(new GrowingRing(e.x, e.y, '#666600', 50, 3, 0.3, 0));
             if (e.x < this.canvasWidth / 2) {
                 this.playerV.leftButton = true;
             } else {
@@ -37,9 +37,13 @@ class GameBasic {
             }
         }
         canvasView.canvas.onPointerUp = e => {
-            canvasView.vfx.push(new GrowingRing(e.x, e.y, '#666600', 1, 3, 0.3, 0));
+            canvasView.vfx.push(new GrowingRing(e.x, e.y, '#666600', 50, 3, 0.3, 0));
             this.playerV.leftButton = false;
             this.playerV.rightButton = false;
+        }
+        canvasView.canvas.onPointerUpAnywhere = () => {
+            // this.playerV.leftButton = false;
+            // this.playerV.rightButton = false;
         }
     }
 
