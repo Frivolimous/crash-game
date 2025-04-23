@@ -48,6 +48,16 @@ class CanvasRender {
         this.Graphic.fillStyle = bgColor;
         this.Graphic.fill();
     }
+
+    drawRect(x, y, width, height, color) {
+        this.Graphic.beginPath();
+        this.Graphic.rect(x, y, width, height);
+        this.Graphic.fillStyle = color;
+        this.Graphic.strokeStyle = "#000000";
+        this.Graphic.lineWidth = 2;
+        this.Graphic.fill();
+        this.Graphic.stroke();
+    }
     
     drawCircle(x, y, radius, strokeColor, fillColor, alpha = 1) {
         this.Graphic.beginPath();

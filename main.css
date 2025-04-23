@@ -144,6 +144,11 @@
         justify-items: center;
     }
 
+    #chances {
+        grid-row: 1;
+        width: 200px;
+    }
+
     #footer {
         padding: 10px;
         padding-top: 20px;
