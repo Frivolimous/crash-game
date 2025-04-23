@@ -44,7 +44,7 @@ function init() {
 
     document.getElementById('instructions-text').innerHTML = game.instructions;
     document.getElementById('sim-button').addEventListener('click', mainController.reset);
-    document.getElementById('bail-button').addEventListener('click', mainController.bailout);
+    document.getElementById('bail-button').addEventListener('pointerdown', mainController.bailout);
     document.getElementById('gen-button').addEventListener('click', () => addFakeResults(30));
 
     window.addEventListener('keydown', (e) => {
