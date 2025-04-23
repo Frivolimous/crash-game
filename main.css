@@ -16,6 +16,12 @@
     .ui-input {
         font-size: 1em;
     }
+
+    #bail-button {
+        font-size: 2em;
+        padding: 0.5em;
+        margin: 1em;
+    }
     
     #main {
         display: grid;

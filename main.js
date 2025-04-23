@@ -114,7 +114,7 @@ class MainController {
         this.ticker.start();
     }
 
-    reset() {
+    reset = () => {
         if (!this.crash.crashed) resultView.runCancelled();
         if (this.game.playerExists) resultView.playerCanceled();
         this.crash.reset();
@@ -171,7 +171,7 @@ class MainController {
         canvasView.drawFrame();
     }
 
-    bailout() {
+    bailout = () => {
         if (!this.crash.crashed && this.game.playerExists) {
             this.game.bailout();
             this.failProcessed = true;
