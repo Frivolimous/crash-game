@@ -2,6 +2,8 @@ const gameConfig = {
     framerate: 30,
     startingMoney: 100,
     maxNodes: 30,
+    canvasWidth: 800,
+    canvasHeight: 800,
 }
 
 const footer = {
@@ -25,7 +27,7 @@ var resultView;
 
 function init() {
     // select game type
-    game = new GameAbstract();
+    game = new GameAbstract(gameConfig.canvasWidth, gameConfig.canvasHeight);
 
     // initialize singletons
     canvasView = new GameView(document.getElementById('main-canvas'));
@@ -65,10 +67,11 @@ function init() {
 function selectGame(index) {
     var game;
     switch(index) {
-        case 1: game = new GameBasic(); break;
-        default: game = new GameAbstract(); break;
+        case 1: game = new GameBasic(gameConfig.canvasWidth, gameConfig.canvasHeight); break;
+        default: game = new GameAbstract(gameConfig.canvasWidth, gameConfig.canvasHeight); break;
     }
 
+    document.getElementById('instructions-text').innerHTML = game.instructions;
     mainController.game.destroy();
     mainController.game = game;
     mainController.crash.crashed = true;
@@ -274,7 +277,7 @@ class GameView {
     vfx = [];
 
     constructor(canvasElement) {
-        this.canvas = new CanvasRender(800, 600, canvasElement);
+        this.canvas = new CanvasRender(gameConfig.canvasWidth, gameConfig.canvasHeight, canvasElement);
     }
 
     drawFrame() {

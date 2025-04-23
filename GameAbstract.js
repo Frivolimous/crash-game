@@ -4,7 +4,13 @@ class GameAbstract {
     ended = false;
     playerExists = false;
 
-    constructor() {}
+    canvasWidth;
+    canvasHeight;
+
+    constructor(width, height) {
+        this.canvasWidth = width;
+        this.canvasHeight = height;
+    }
 
     destroy() {}
 

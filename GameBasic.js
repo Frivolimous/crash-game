@@ -11,14 +11,36 @@ class GameBasic {
     enemiesSpawned = 0;
     enemyTimer;
 
-    playerV = new BasicPlayer(400, 500, 100);
+    playerV;
 
     ended = false;
 
     playerExists = false;
 
-    constructor() {
+    canvasWidth;
+    canvasHeight;
+
+    constructor(width, height) {
+        this.canvasWidth = width;
+        this.canvasHeight = height;
+
+        this.playerV = new BasicPlayer(width / 2, height - 200, 100);
+
         this.enemyTimer = new Timer(this.enemyConfig.minDelay, this.enemyConfig.incDelay);
+
+        canvasView.canvas.onPointerDown = e => {
+            canvasView.vfx.push(new GrowingRing(e.x, e.y, '#666600', 1, 3, 0.3, 0));
+            if (e.x < this.canvasWidth / 2) {
+                this.playerV.leftButton = true;
+            } else {
+                this.playerV.rightButton = true;
+            }
+        }
+        canvasView.canvas.onPointerUp = e => {
+            canvasView.vfx.push(new GrowingRing(e.x, e.y, '#666600', 1, 3, 0.3, 0));
+            this.playerV.leftButton = false;
+            this.playerV.rightButton = false;
+        }
     }
 
     destroy() {
@@ -103,7 +125,7 @@ class GameBasic {
     }
 
     addEnemy(row) {
-        this.enemies.push(new BasicEnemy(this.enemyConfig.minSpeed + Math.random() * this.enemyConfig.incSpeed, row, 600));
+        this.enemies.push(new BasicEnemy(this.enemyConfig.minSpeed + Math.random() * this.enemyConfig.incSpeed, row, this.canvasHeight));
         this.enemiesSpawned++;
     }
 }

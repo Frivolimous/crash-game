@@ -7,8 +7,17 @@
         <div id="left-column">
             <canvas id = "main-canvas"></canvas>
             <br>
+        </div>
+        <div id="result-column">
+            <div id="result-header">Main Results:</div>
+            <div id="result-list"></div>
+        </div>
+        <div id="your-column">
+            <div id="your-header">Your Results:</div>
+            <div id="your-list"></div>
+        </div>
+        <div id = "footer">
             <div id = "instructions-text"></div>
-            <br>
             <button id="bail-button">Bailout (Space)</button>
             <br>
             <input id="auto-bail-text" type="number" min="1.0" value="5.00" step="0.01" onChange="value = Number(value).toFixed(2)" />
@@ -23,14 +32,6 @@
             <button id="sim-button">New Run (P)</button><input type="checkbox" id="auto-toggle" checked>Auto-Start</input>
             <br>
             <button id="gen-button">Fake Results</button>
-        </div>
-        <div id="right-column">
-            <div id="result-header">Main Results:</div>
-            <div id="result-list"></div>
-        </div>
-        <div id="right-column">
-            <div id="your-header">Your Results:</div>
-            <div id="your-list"></div>
         </div>
     </div>
     

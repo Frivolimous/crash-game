@@ -3,6 +3,9 @@ class CanvasRender {
     Graphic;
     Width;
     Height;
+    
+    onPointerDown;
+    onPointerUp;
 
     constructor(width, height, element) {
         this.Element = element;
@@ -12,6 +15,20 @@ class CanvasRender {
 
         element.width = this.Width;
         element.height = this.Height;
+
+        element.addEventListener('pointerdown', e => {
+            let r = element.getBoundingClientRect();
+            
+            var location = {x: e.offsetX * element.width / r.width, y: e.offsetY * element.height / r.height};
+            this.onPointerDown && this.onPointerDown(location);
+        });
+
+        element.addEventListener('pointerup', e => {
+            let r = element.getBoundingClientRect();
+            
+            var location = {x: e.offsetX * element.width / r.width, y: e.offsetY * element.height / r.height};
+            this.onPointerUp && this.onPointerUp(location);
+        });
     }
 
     clear() {
