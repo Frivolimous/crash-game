@@ -222,7 +222,7 @@ class ResultView {
         this.checkOverflow(this.mainResultContainer);
     }
 
-    runCancelled(text = 'Run Canceled') {
+    runCancelled(text = 'Run Cancel') {
         let newNode = document.createElement('div');
         newNode.classList.add('result-entry');
         newNode.innerHTML = text;
@@ -233,7 +233,7 @@ class ResultView {
     playerCrashed() {
         let newNode = document.createElement('div');
         newNode.classList.add('result-entry');
-        newNode.innerHTML = 'Crashed...';
+        newNode.innerHTML = 'Crash';
         newNode.style.background = '#aa4444';
         this.playerResultContainer.appendChild(newNode);
         this.checkOverflow(this.playerResultContainer);
@@ -242,7 +242,7 @@ class ResultView {
     playerFailed() {
         let newNode = document.createElement('div');
         newNode.classList.add('result-entry');
-        newNode.innerHTML = 'Failure!';
+        newNode.innerHTML = 'Fail!';
         newNode.style.background = '#bb9944';
         this.playerResultContainer.appendChild(newNode);
         this.checkOverflow(this.playerResultContainer);
