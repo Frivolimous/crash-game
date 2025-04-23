@@ -278,6 +278,11 @@ class GameView {
     gradient1 = new ColorGradient(0xff0000, 0xffcc00);
     gradient2 = new ColorGradient(0xffcc00, 0xffff00);
     gradient3 = new ColorGradient(0xffff00, 0x00ff00);
+    gradient4 = new ColorGradient(0x00ff00, 0xffffff);
+    gradient5 = new ColorGradient(0xaaaaaa, 0xffffff);
+    g5Percent = 0;
+    g5Up = true;
+    g5Speed = 0.1;
 
     constructor(canvasElement) {
         this.canvas = new CanvasRender(gameConfig.canvasWidth, gameConfig.canvasHeight, canvasElement);
@@ -323,12 +328,26 @@ class GameView {
             crashColor = this.gradient3.getStringAt(0);
         } else if (crashChance < 0.65) {
             crashColor = this.gradient3.getStringAt((crashChance - 0.6) / 0.05);
-        } else {
+        } else if (crashChance < 0.75) {
             crashColor = this.gradient3.getStringAt(1);
+        } else if (crashChance < 0.8) {
+            crashColor = this.gradient4.getStringAt((crashChance - 0.75) / 0.05);
+            this.g5Percent = 1;
+        } else {
+            this.g5Percent += this.g5Speed * (this.g5Up ? 1 : -1);
+            if (this.g5Percent > 1) {
+                this.g5Up = false;
+                this.g5Percent = 1;
+            }
+            if (this.g5Percent < 0) {
+                this.g5Up = true;
+                this.g5Percent = 0;
+            }
+            crashColor = this.gradient5.getStringAt(this.g5Percent);
         }
 
         this.canvas.drawRect(200, 125, 300, 25, '#000000');
-        this.canvas.drawRect(200, 125, crashChance * 300, 25, crashColor);
+        this.canvas.drawRect(200, 125, Math.min(1, crashChance / 0.8) * 300, 25, crashColor);
         this.canvas.addText(650, 40, `Crash Chance: ${mainController.crash.crashChance}%`, 12);
         this.canvas.addText(650, 20, `Framerate: ${mainController.ticker.framerate.toFixed(2)}`, 12);
         this.canvas.addText(650, 60, `Bailout For: $${bailoutCash.toFixed(2)}`, 12);
