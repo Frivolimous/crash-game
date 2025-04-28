@@ -22,6 +22,7 @@ class JMTicker {
     onFrame = (time) => {
         var deltaTime = time - this.lastTime;
         this.lastTime = time;
+        if (deltaTime > 1000) deltaTime = 0;
         this.tickInc += deltaTime;
 
         if (this.tickInc > this.tickDelay) {
