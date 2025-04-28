@@ -40,6 +40,16 @@
         width: 100vw;
         background: #ffffaa;
     }
+
+    #interaction-select-container {
+        display: flex;
+        position: fixed;
+    }
+
+    .interaction-select-button {
+        font-size: 1em;
+        margin: 0.2em;
+    }
     
     #result-column {
         grid-row: 2;
@@ -128,6 +138,16 @@
     
     #left-column {
         grid-row: 1;
+    }
+
+    #interaction-select-container {
+        display: flex;
+        position: fixed;
+    }
+
+    .interaction-select-button {
+        height: 20px;
+        margin: 3px;
     }
 
     #entry-fee {

@@ -83,6 +83,16 @@ class CanvasRender {
         this.Graphic.globalAlpha = 1;
     }
 
+    drawPartialCircle(x, y, radius, color, percent) {
+        this.Graphic.beginPath();
+        this.Graphic.arc(x, y, radius, 0, 2 * Math.PI * percent);
+        this.Graphic.lineWidth = "10";
+        this.Graphic.strokeStyle = color;
+        this.Graphic.globalAlpha = 1;
+        this.Graphic.stroke();
+        this.Graphic.globalAlpha = 1;
+    }
+
     drawParticle(x, y, radius, fillColor, alpha) {
         this.Graphic.beginPath();
         this.Graphic.arc(x, y, radius, 0, 2 * Math.PI);

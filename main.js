@@ -6,6 +6,10 @@ const gameConfig = {
     canvasHeight: 800,
 }
 
+const header = {
+    interactions: document.getElementById('interaction-select-container'),
+}
+
 const footer = {
     entryFeeText: document.getElementById('entry-fee'),
     autoToggle: document.getElementById('auto-toggle'),
@@ -42,7 +46,6 @@ function init() {
 
     mainController = new MainController(game, playerM);
 
-    document.getElementById('instructions-text').innerHTML = game.instructions;
     document.getElementById('sim-button').addEventListener('click', mainController.reset);
     document.getElementById('bail-button').addEventListener('pointerdown', mainController.bailout);
     document.getElementById('gen-button').addEventListener('click', () => addFakeResults(30));
@@ -52,24 +55,29 @@ function init() {
             case 'p': mainController.reset(); break;
             case ' ': mainController.bailout(); break;
             case 'c': mainController.crash.crashed = true; break;
-            // case '1': selectGame(1); break;
-            // case '0': selectGame(0); break;
         }
     });
+
+    addInteractionButton('None', 0);
+    addInteractionButton('Dodge LR', 1);
+    addInteractionButton('Shield', 2);
 
     addFakeResults(10);
     mainController.crash.fakeResult();
     resultView.addResult(mainController.crash.multiplier);
     resultView.playerCanceled('No Entry');
-    selectGame(1);
+    selectGame(2);
 }
 
 function selectGame(index) {
-    var game;
+    var cc;
     switch(index) {
-        case 1: game = new GameBasic(gameConfig.canvasWidth, gameConfig.canvasHeight); break;
-        default: game = new GameAbstract(gameConfig.canvasWidth, gameConfig.canvasHeight); break;
+        case 1: cc = GameBasic; break;
+        case 2: cc = GameShieldHold; break;
+        default: cc = GameAbstract; break;
     }
+
+    var game = new cc(gameConfig.canvasWidth, gameConfig.canvasHeight);
 
     document.getElementById('instructions-text').innerHTML = game.instructions;
     mainController.game.destroy();
@@ -84,6 +92,14 @@ function addFakeResults(count) {
         resultView.addResult(mult);
         resultView.playerCanceled('No Entry');
     });
+}
+
+function addInteractionButton(text, index) {
+    var newButton = document.createElement('button');
+    newButton.classList.add('interaction-select-button');
+    newButton.innerHTML = text;
+    newButton.onclick = () => selectGame(index);
+    header.interactions.appendChild(newButton);
 }
 
 function simulateResults(count) {
@@ -275,14 +291,7 @@ class ResultView {
 class GameView {
     canvas;
     vfx = [];
-    gradient1 = new ColorGradient(0xff0000, 0xffcc00);
-    gradient2 = new ColorGradient(0xffcc00, 0xffff00);
-    gradient3 = new ColorGradient(0xffff00, 0x00ff00);
-    gradient4 = new ColorGradient(0x00ff00, 0xffffff);
-    gradient5 = new ColorGradient(0xaaaaaa, 0xffffff);
-    g5Percent = 0;
-    g5Up = true;
-    g5Speed = 0.1;
+    gauge = new MultGauge(220, 125, 200, 15);
 
     constructor(canvasElement) {
         this.canvas = new CanvasRender(gameConfig.canvasWidth, gameConfig.canvasHeight, canvasElement);
@@ -313,41 +322,7 @@ class GameView {
         }
 
         // stats corner
-        var crashColor;
-        var crashChance = mainController.crash.crashChance / 100;
-
-        if (crashChance < 0.15) {
-            crashColor = this.gradient1.getStringAt(0);
-        } else if (crashChance < 0.2) {
-            crashColor = this.gradient1.getStringAt((crashChance - 0.15) / 0.05);
-        } else if (crashChance < 0.4) {
-            crashColor = this.gradient2.getStringAt(0);
-        } else if (crashChance < 0.45) {
-            crashColor = this.gradient2.getStringAt((crashChance - 0.4) / 0.05);
-        } else if (crashChance < 0.6) {
-            crashColor = this.gradient3.getStringAt(0);
-        } else if (crashChance < 0.65) {
-            crashColor = this.gradient3.getStringAt((crashChance - 0.6) / 0.05);
-        } else if (crashChance < 0.75) {
-            crashColor = this.gradient3.getStringAt(1);
-        } else if (crashChance < 0.8) {
-            crashColor = this.gradient4.getStringAt((crashChance - 0.75) / 0.05);
-            this.g5Percent = 1;
-        } else {
-            this.g5Percent += this.g5Speed * (this.g5Up ? 1 : -1);
-            if (this.g5Percent > 1) {
-                this.g5Up = false;
-                this.g5Percent = 1;
-            }
-            if (this.g5Percent < 0) {
-                this.g5Up = true;
-                this.g5Percent = 0;
-            }
-            crashColor = this.gradient5.getStringAt(this.g5Percent);
-        }
-
-        this.canvas.drawRect(200, 125, 300, 25, '#000000');
-        this.canvas.drawRect(200, 125, Math.min(1, crashChance / 0.8) * 300, 25, crashColor);
+        this.gauge.update(this.canvas, mainController.crash.crashChance / 100);
         this.canvas.addText(650, 40, `Crash Chance: ${mainController.crash.crashChance}%`, 12);
         this.canvas.addText(650, 20, `Framerate: ${mainController.ticker.framerate.toFixed(2)}`, 12);
         this.canvas.addText(650, 60, `Bailout For: $${bailoutCash.toFixed(2)}`, 12);
