@@ -61,12 +61,13 @@ function init() {
     addInteractionButton('None', 0);
     addInteractionButton('Dodge LR', 1);
     addInteractionButton('Shield', 2);
+    addInteractionButton('Rotate', 3);
 
     addFakeResults(10);
     mainController.crash.fakeResult();
     resultView.addResult(mainController.crash.multiplier);
     resultView.playerCanceled('No Entry');
-    selectGame(2);
+    selectGame(3);
 }
 
 function selectGame(index) {
@@ -74,6 +75,7 @@ function selectGame(index) {
     switch(index) {
         case 1: cc = GameBasic; break;
         case 2: cc = GameShieldHold; break;
+        case 3: cc = GameRotate; break;
         default: cc = GameAbstract; break;
     }
 

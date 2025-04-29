@@ -7,6 +7,7 @@ class CanvasRender {
     onPointerDown;
     onPointerUp;
     onPointerUpAnywhere;
+    onPointerMove;
 
     constructor(width, height, element) {
         this.Element = element;
@@ -33,9 +34,22 @@ class CanvasRender {
 
         element.addEventListener('pointerleave', e => {
             this.onPointerUpAnywhere && this.onPointerUpAnywhere();
+        });
 
-            console.log(e);
-        })
+        element.addEventListener('touchmove', e => {
+            let r = element.getBoundingClientRect();
+            var x = e.targetTouches[0].pageX * element.width / r.width;
+            var y = e.targetTouches[0].pageY * element.height / r.height;
+            var location = {x, y};
+            this.onPointerMove && this.onPointerMove(location);
+        });
+
+        element.addEventListener('mousemove', e => {
+            let r = element.getBoundingClientRect();
+            
+            var location = {x: e.offsetX * element.width / r.width, y: e.offsetY * element.height / r.height};
+            this.onPointerMove && this.onPointerMove(location);
+        });
     }
 
     clear() {
@@ -83,9 +97,19 @@ class CanvasRender {
         this.Graphic.globalAlpha = 1;
     }
 
-    drawPartialCircle(x, y, radius, color, percent) {
+    drawPartialCirclePercent(x, y, radius, color, percent) {
         this.Graphic.beginPath();
         this.Graphic.arc(x, y, radius, -Math.PI / 2, -Math.PI / 2 + 2 * Math.PI * percent);
+        this.Graphic.lineWidth = "10";
+        this.Graphic.strokeStyle = color;
+        this.Graphic.globalAlpha = 1;
+        this.Graphic.stroke();
+        this.Graphic.globalAlpha = 1;
+    }
+
+    drawPartialCircle(x, y, radius, color, startAngle, endAngle) {
+        this.Graphic.beginPath();
+        this.Graphic.arc(x, y, radius, startAngle, endAngle);
         this.Graphic.lineWidth = "10";
         this.Graphic.strokeStyle = color;
         this.Graphic.globalAlpha = 1;

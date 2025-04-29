@@ -1,6 +1,6 @@
 
-class GameShieldHold {
-    instructions = "Hold 's' or click anywhere to start shielding.";
+class GameRotate {
+    instructions = "drag around (or Left Right or A D) to rotate the shield";
     ended = false;
     playerExists = false;
 
@@ -8,9 +8,9 @@ class GameShieldHold {
     canvasHeight;
 
     enemyConfig = {
-        minSpeed: 10,
-        incSpeed: 10,
-        minDelay: 500 / 30,
+        minSpeed: 7,
+        incSpeed: 3,
+        minDelay: 1000 / 30,
         incDelay: 500 / 30,
     }
     enemies = [];
@@ -23,7 +23,7 @@ class GameShieldHold {
         this.canvasWidth = width;
         this.canvasHeight = height;
 
-        this.playerV = new ShieldPlayer(width / 2, height / 2);
+        this.playerV = new RotatePlayer(width / 2, height / 2);
         this.enemyTimer = new Timer(this.enemyConfig.minDelay, this.enemyConfig.incDelay);
 
         canvasView.canvas.onPointerDown = e => {
@@ -35,6 +35,11 @@ class GameShieldHold {
             this.playerV.shielding = false;
         }
         canvasView.canvas.onPointerUpAnywhere = () => {
+        }
+
+        canvasView.canvas.onPointerMove = e => {
+            this.playerV.rotateTo(e.x, e.y);
+            // canvasView.vfx.push(new GrowingRing(e.x, e.y, '#666600', 50, 3, 0.3, 0));
         }
     }
 
@@ -68,17 +73,23 @@ class GameShieldHold {
                 el.toDestroy = true;
             }
             if (this.playerExists) {
-                if (this.playerV.activeShielding) {
-                    if (el.collisionTest(this.playerV, 50)) {
-                        canvasView.vfx.push(new Firework(el.x, el.y, 5, '#aa6666', 1));
+                if (el.collisionTest(this.playerV, 50)) {
+                    var angle = Math.atan2(el.y - this.playerV.y, el.x - this.playerV.x);
+                    if (angle > this.playerV.shieldAngle - this.playerV.shieldSize && angle < this.playerV.shieldAngle + this.playerV.shieldSize) {
                         el.toDestroy = true;
-                        this.playerV.takeDamage();
+                        canvasView.vfx.push(new Firework(el.x, el.y, 5, '#aa6666', 1));
                     }
-                } else {
-                    if (el.collisionTest(this.playerV, 15)) {
-                        this.playerExists = false;
-                        canvasView.vfx.push(new Firework(this.playerV.x, this.playerV.y, 10, '#00ff00', 1));
-                    }
+                }
+                // if (this.playerV.activeShielding) {
+                //     if (el.collisionTest(this.playerV, 50)) {
+                //         canvasView.vfx.push(new Firework(el.x, el.y, 5, '#aa6666', 1));
+                //         // el.toDestroy = true;
+                //         // this.playerV.takeDamage();
+                //     }
+                // } else {
+                if (el.collisionTest(this.playerV, 15)) {
+                    this.playerExists = false;
+                    canvasView.vfx.push(new Firework(this.playerV.x, this.playerV.y, 10, '#00ff00', 1));
                 }
             }
 
@@ -110,12 +121,7 @@ class GameShieldHold {
         if (!this.ended) this.drawMainShip(canvas,this.playerV.x, this.playerV.y);
         if (this.playerExists) {
             this.drawPlayer(canvas,this.playerV.x, this.playerV.y);
-            if (this.playerV.activeShielding) {
-                this.drawShield(canvas, this.playerV.x, this.playerV.y, this.playerV.fuelAmount);
-            }
-            if (this.playerV.fuelAmount < 1) {
-                canvas.drawPartialCirclePercent(this.playerV.x, this.playerV.y, 30, '#006699', this.playerV.fuelAmount);
-            }
+            canvas.drawPartialCircle(this.playerV.x, this.playerV.y, 30, '#006699', this.playerV.shieldAngle - this.playerV.shieldSize, this.playerV.shieldAngle + this.playerV.shieldSize);
         }
         this.enemies.forEach(el => this.drawEnemy(canvas, el.x, el.y));
         canvas.addText(650, 80, `Enemies Spawned: ${this.enemiesSpawned}`, 12);
@@ -155,26 +161,22 @@ class GameShieldHold {
             y += 200 * Math.random() - 100;
         }
 
-        this.enemies.push(new ShieldEnemy(x, y, speed, Math.PI * 2 * Math.random()));
+        this.enemies.push(new RotateEnemy(x, y, speed, Math.PI * 2 * Math.random()));
         this.enemiesSpawned++;
     }
 }
 
-class ShieldPlayer {
+class RotatePlayer {
     position = 0;
-    fuelAmount;
-    fuelDeplete = 0.005;
-    fuelRecover = 0.005;
-    startingFuel = 0.7;
-    shielding = false;
-    shieldDamageAmount = 0.1;
+    shieldAngle = 0;
+    shieldSize = Math.PI * 0.3;
+    keyboardShieldSpeed = Math.PI * 0.1;
 
     x;
     y;
 
-    get activeShielding() {
-        return this.shielding && this.fuelAmount > 0;
-    }
+    leftButton = false;
+    rightButton = false;
 
     constructor(x, y) {
         this.x = x;
@@ -184,8 +186,6 @@ class ShieldPlayer {
     }
 
     reset() {
-        this.fuelAmount = this.startingFuel;
-        this.shielding = false;
     }
 
     destroy() {
@@ -193,32 +193,36 @@ class ShieldPlayer {
         window.removeEventListener('keyup', this.keyUp);
     }
 
-    takeDamage() {
-        this.fuelAmount -= this.shieldDamageAmount;
-    }
-
     keyDown = (e) => {
         switch(e.key.toLowerCase()) {
-            case 's': case 'arrowup': this.shielding = true; break;
+            case 'a': case 'arrowleft': this.leftButton = true; break;
+            case 'd': case 'arrowright': this.rightButton = true; break;
         }
     }
     
     keyUp = (e) => {
         switch(e.key.toLowerCase()) {
-            case 's': case 'arrowup': this.shielding = false; break;
+            case 'a': case 'arrowleft': this.leftButton = false; break;
+            case 'd': case 'arrowright': this.rightButton = false; break;
         }
     }
 
     update() {
-        if (this.shielding) {
-            this.fuelAmount = Math.max(0, this.fuelAmount - this.fuelDeplete);
-        } else {
-            this.fuelAmount = Math.min(1, this.fuelAmount + this.fuelRecover);
-        }    
+        if (this.leftButton) {
+            this.shieldAngle -= this.keyboardShieldSpeed;
+        }
+        if (this.rightButton) {
+            this.shieldAngle += this.keyboardShieldSpeed;
+        }
+    }
+
+    rotateTo(x, y) {
+        var angle = Math.atan2(y - this.y, x - this.x);
+        this.shieldAngle = angle;
     }
 }
 
-class ShieldEnemy {
+class RotateEnemy {
     speed = 0;
     x = 0;
     y = 0;
