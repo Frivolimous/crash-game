@@ -7,7 +7,9 @@
         <div id="interaction-select-container"></div>
         <div id="left-column">
             <canvas id = "main-canvas"></canvas>
-            <br>
+            <div id="bail-button-container">
+                <button class="ui-button" id="bail-button">Bailout (Space)</button>
+            </div>
         </div>
         <div id="result-column">
             <div id="result-header">Main Results:</div>
@@ -27,7 +29,6 @@
         </div>
         <div id = "footer">
             <div id = "instructions-text"></div>
-            <button class="ui-button" id="bail-button">Bailout (Space)</button>
             <br>
             <input class="ui-input" id="auto-bail-text" type="number" min="1.0" value="5.00" step="0.01" onChange="value = Number(value).toFixed(2)" />
             <input class="ui-check" id="auto-bail-check" type="checkbox">Auto-Bail</input>

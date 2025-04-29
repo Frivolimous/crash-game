@@ -18,9 +18,18 @@
     }
 
     #bail-button {
-        font-size: 2em;
+        font-size: 1.5em;
         padding: 0.5em;
-        margin: 1em;
+        position: relative;
+        bottom: 3em;
+        border-radius: 0.6em;
+        background: orange;
+        border: solid 0.1em black;
+        box-shadow: 0 0.25em 0.5em 0 rgba(0, 0, 0, 0.2), 0 0.25em 0.5em 0 rgba(0, 0, 0, 0.19);
+    }
+
+    #bail-button-container {
+        height: 0px;
     }
     
     #main {
@@ -148,6 +157,22 @@
     .interaction-select-button {
         height: 20px;
         margin: 3px;
+    }
+
+    #bail-button {
+        font-size: 1.5em;
+        padding: 0.5em;
+        position: relative;
+        bottom: 3em;
+        border-radius: 0.6em;
+        background: orange;
+        border: solid 0.1em black;
+        box-shadow: 0 0.25em 0.5em 0 rgba(0, 0, 0, 0.2), 0 0.25em 0.5em 0 rgba(0, 0, 0, 0.19);
+    }
+
+    #bail-button-container {
+        height: 0px;
+        text-align: center;
     }
 
     #entry-fee {

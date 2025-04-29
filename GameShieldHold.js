@@ -1,6 +1,8 @@
 
 class GameShieldHold {
     instructions = "Hold 's' or click anywhere to start shielding.";
+    mobileInstructions = "Tap and hold anywhere to start shielding.";
+
     ended = false;
     playerExists = false;
 

@@ -28,9 +28,11 @@ var bailoutCash = 0;
 // Views
 var canvasView;
 var resultView;
+var isMobile;
 
 function init() {
     // select game type
+    isMobile = testMobile();
     game = new GameAbstract(gameConfig.canvasWidth, gameConfig.canvasHeight);
 
     // initialize singletons
@@ -49,6 +51,10 @@ function init() {
     document.getElementById('sim-button').addEventListener('click', mainController.reset);
     document.getElementById('bail-button').addEventListener('pointerdown', mainController.bailout);
     document.getElementById('gen-button').addEventListener('click', () => addFakeResults(30));
+
+    if (isMobile) {
+        document.getElementById('bail-button').innerHTML = "Bailout";
+    }
 
     window.addEventListener('keydown', (e) => {
         switch(e.key.toLowerCase()) {
@@ -70,6 +76,10 @@ function init() {
     selectGame(3);
 }
 
+function testMobile() {
+    return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+}
+
 function selectGame(index) {
     var cc;
     switch(index) {
@@ -81,7 +91,7 @@ function selectGame(index) {
 
     var game = new cc(gameConfig.canvasWidth, gameConfig.canvasHeight);
 
-    document.getElementById('instructions-text').innerHTML = game.instructions;
+    document.getElementById('instructions-text').innerHTML = isMobile ? game.mobileInstructions : game.instructions;
     mainController.game.destroy();
     mainController.game = game;
     mainController.crash.crashed = true;

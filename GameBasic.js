@@ -1,6 +1,8 @@
 
 class GameBasic {
     instructions = "Use 'a' and 'd' or Left / Right Arrows to dodge left or right";
+    mobileInstructions = "Tap on the left or right sides of the screen to dodge left or right";
+    
     enemyConfig = {
         minSpeed: 10,
         incSpeed: 10,

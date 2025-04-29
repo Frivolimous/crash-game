@@ -1,6 +1,8 @@
 
 class GameRotate {
-    instructions = "drag around (or Left Right or A D) to rotate the shield";
+    instructions = "Drag around (or Left Right or A D) to rotate the shield";
+    mobileInstructions = 'Aim the shield to block the asteroids using the control area';
+
     ended = false;
     playerExists = false;
 
@@ -17,6 +19,13 @@ class GameRotate {
     enemiesSpawned = 0;
     enemyTimer;
 
+    controller = {
+        x: 0,
+        y: 0,
+        size: 130,
+        padding: 50,
+    }
+
     playerV;
 
     constructor(width, height) {
@@ -25,6 +34,9 @@ class GameRotate {
 
         this.playerV = new RotatePlayer(width / 2, height / 2);
         this.enemyTimer = new Timer(this.enemyConfig.minDelay, this.enemyConfig.incDelay);
+
+        this.controller.x = 0 + this.controller.size + this.controller.padding;
+        this.controller.y = width - this.controller.size -this.controller.padding;
 
         canvasView.canvas.onPointerDown = e => {
             canvasView.vfx.push(new GrowingRing(e.x, e.y, '#666600', 50, 3, 0.3, 0));
@@ -38,8 +50,17 @@ class GameRotate {
         }
 
         canvasView.canvas.onPointerMove = e => {
-            this.playerV.rotateTo(e.x, e.y);
-            // canvasView.vfx.push(new GrowingRing(e.x, e.y, '#666600', 50, 3, 0.3, 0));
+            if (isMobile) {
+                var distance = Math.sqrt(Math.pow(e.y - this.controller.y, 2) + Math.pow(e.x - this.controller.x, 2));
+                if (distance < this.controller.size) {
+                    var angle = Math.atan2(e.y - this.controller.y, e.x - this.controller.x);
+                    this.playerV.shieldAngle = angle;
+                }
+            } else {
+                angle = Math.atan2(e.y - this.playerV.y, e.x - this.playerV.x);
+                this.playerV.shieldAngle = angle;
+            }
+            
         }
     }
 
@@ -80,13 +101,6 @@ class GameRotate {
                         canvasView.vfx.push(new Firework(el.x, el.y, 5, '#aa6666', 1));
                     }
                 }
-                // if (this.playerV.activeShielding) {
-                //     if (el.collisionTest(this.playerV, 50)) {
-                //         canvasView.vfx.push(new Firework(el.x, el.y, 5, '#aa6666', 1));
-                //         // el.toDestroy = true;
-                //         // this.playerV.takeDamage();
-                //     }
-                // } else {
                 if (el.collisionTest(this.playerV, 15)) {
                     this.playerExists = false;
                     canvasView.vfx.push(new Firework(this.playerV.x, this.playerV.y, 10, '#00ff00', 1));
@@ -122,6 +136,10 @@ class GameRotate {
         if (this.playerExists) {
             this.drawPlayer(canvas,this.playerV.x, this.playerV.y);
             canvas.drawPartialCircle(this.playerV.x, this.playerV.y, 30, '#006699', this.playerV.shieldAngle - this.playerV.shieldSize, this.playerV.shieldAngle + this.playerV.shieldSize);
+        }
+        if (isMobile) {
+            canvas.drawCircle(this.controller.x, this.controller.y, this.controller.size, '#ffffff', '#eeeebb', 1);
+            canvas.drawCircle(this.controller.x, this.controller.y, 10, '#ffffff', '#ffffff', 1);
         }
         this.enemies.forEach(el => this.drawEnemy(canvas, el.x, el.y));
         canvas.addText(650, 80, `Enemies Spawned: ${this.enemiesSpawned}`, 12);
@@ -214,11 +232,6 @@ class RotatePlayer {
         if (this.rightButton) {
             this.shieldAngle += this.keyboardShieldSpeed;
         }
-    }
-
-    rotateTo(x, y) {
-        var angle = Math.atan2(y - this.y, x - this.x);
-        this.shieldAngle = angle;
     }
 }
 

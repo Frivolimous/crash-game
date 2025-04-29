@@ -1,6 +1,7 @@
 class GameAbstract {
     instructions = "There is no game. Just wait.";
-    
+    mobileInstructions = "There is no game. Just wait.";
+
     ended = false;
     playerExists = false;
 
