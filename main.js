@@ -30,6 +30,8 @@ var canvasView;
 var resultView;
 var isMobile;
 
+var interactionConstructors = [];
+
 function init() {
     // select game type
     isMobile = testMobile();
@@ -64,16 +66,18 @@ function init() {
         }
     });
 
-    addInteractionButton('None', 0);
-    addInteractionButton('Dodge LR', 1);
-    addInteractionButton('Shield', 2);
-    addInteractionButton('Rotate', 3);
+    addInteractionButton('None', GameAbstract);
+    addInteractionButton('Dodge LR', GameBasic);
+    addInteractionButton('Shield', GameShieldHold);
+    addInteractionButton('Rotate', GameRotate);
+    addInteractionButton('Smooth', GameSmoothDodge);
+    addInteractionButton('Jump', GameJump);
 
     addFakeResults(10);
     mainController.crash.fakeResult();
     resultView.addResult(mainController.crash.multiplier);
     resultView.playerCanceled('No Entry');
-    selectGame(3);
+    selectGame(5);
 }
 
 function testMobile() {
@@ -81,13 +85,7 @@ function testMobile() {
 }
 
 function selectGame(index) {
-    var cc;
-    switch(index) {
-        case 1: cc = GameBasic; break;
-        case 2: cc = GameShieldHold; break;
-        case 3: cc = GameRotate; break;
-        default: cc = GameAbstract; break;
-    }
+    var cc = interactionConstructors[index];
 
     var game = new cc(gameConfig.canvasWidth, gameConfig.canvasHeight);
 
@@ -106,7 +104,10 @@ function addFakeResults(count) {
     });
 }
 
-function addInteractionButton(text, index) {
+function addInteractionButton(text, cc) {
+    interactionConstructors.push(cc);
+    var index = interactionConstructors.length - 1;
+
     var newButton = document.createElement('button');
     newButton.classList.add('interaction-select-button');
     newButton.innerHTML = text;

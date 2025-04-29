@@ -256,14 +256,6 @@ class RotateEnemy {
         this.y += this.vY;
     }
 
-    collisionTest = (player, radius) => {
-        if (this.distanceTo(player.x, player.y) <= radius) {
-            return true;
-        }
-
-        return false;
-    }
-
     borderTest(left, top, right, bottom) {
         if ((this.vX > 0 && this.x > right) ||
             (this.vX < 0 && this.x < left) ||
@@ -272,6 +264,14 @@ class RotateEnemy {
             return true;
         }
         
+        return false;
+    }
+
+    collisionTest = (player, radius) => {
+        if (this.distanceTo(player.x, player.y) <= radius) {
+            return true;
+        }
+
         return false;
     }
 

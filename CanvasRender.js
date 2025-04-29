@@ -63,19 +63,34 @@ class CanvasRender {
         this.Graphic.fill();
     }
 
-    drawRect(x, y, width, height, color) {
+    drawRect(x, y, width, height, color, alpha = 1) {
         this.Graphic.beginPath();
         this.Graphic.rect(x, y, width, height);
         this.Graphic.fillStyle = color;
         this.Graphic.strokeStyle = "#000000";
         this.Graphic.lineWidth = 2;
+        this.Graphic.globalAlpha = Math.max(alpha, 0);
         this.Graphic.fill();
         this.Graphic.stroke();
+        this.Graphic.globalAlpha = 1;
     }
     
     drawCircle(x, y, radius, strokeColor, fillColor, alpha = 1) {
         this.Graphic.beginPath();
         this.Graphic.arc(x, y, radius, 0, 2 * Math.PI);
+        this.Graphic.lineWidth = "3";
+        this.Graphic.strokeStyle = strokeColor;
+        this.Graphic.fillStyle = fillColor;
+        this.Graphic.globalAlpha = Math.max(alpha, 0);
+        this.Graphic.fill();
+        this.Graphic.stroke();
+        this.Graphic.globalAlpha = 1;
+    }
+
+    drawElipse(x, y, radiusX, radiusY, strokeColor, fillColor, alpha = 1) {
+        this.Graphic.beginPath();
+        // this.Graphic.elipse(x, y, radius, 0, 2 * Math.PI);
+        this.Graphic.ellipse(x, y, radiusX, radiusY, 0, 0, 2 * Math.PI);
         this.Graphic.lineWidth = "3";
         this.Graphic.strokeStyle = strokeColor;
         this.Graphic.fillStyle = fillColor;
