@@ -19,6 +19,7 @@
 
     #bail-button {
         font-size: 1.5em;
+        width: 7em;
         padding: 0.5em;
         position: relative;
         bottom: 3em;
