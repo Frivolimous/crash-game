@@ -72,6 +72,7 @@ class GameShieldHold {
                     if (el.collisionTest(this.playerV, 50)) {
                         canvasView.vfx.push(new Firework(el.x, el.y, 5, '#aa6666', 1));
                         el.toDestroy = true;
+                        this.playerV.takeDamage();
                     }
                 } else {
                     if (el.collisionTest(this.playerV, 15)) {
@@ -163,8 +164,10 @@ class ShieldPlayer {
     position = 0;
     fuelAmount;
     fuelDeplete = 0.005;
-    fuelRecover = 0.003;
+    fuelRecover = 0.005;
+    startingFuel = 0.7;
     shielding = false;
+    shieldDamageAmount = 0.1;
 
     x;
     y;
@@ -181,13 +184,17 @@ class ShieldPlayer {
     }
 
     reset() {
-        this.fuelAmount = 1;
+        this.fuelAmount = this.startingFuel;
         this.shielding = false;
     }
 
     destroy() {
         window.removeEventListener('keydown', this.keyDown);
         window.removeEventListener('keyup', this.keyUp);
+    }
+
+    takeDamage() {
+        this.fuelAmount -= this.shieldDamageAmount;
     }
 
     keyDown = (e) => {
