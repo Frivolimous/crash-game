@@ -72,12 +72,14 @@ function init() {
     addInteractionButton('Rotate', GameRotate);
     addInteractionButton('Smooth', GameSmoothDodge);
     addInteractionButton('Jump', GameJump);
+    addInteractionButton('Shooter', GameShooter);
+    // addInteractionButton('Frogger', GameAdvance);
 
     addFakeResults(10);
     mainController.crash.fakeResult();
     resultView.addResult(mainController.crash.multiplier);
     resultView.playerCanceled('No Entry');
-    selectGame(5);
+    selectGame(6);
 }
 
 function testMobile() {

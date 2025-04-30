@@ -1,7 +1,7 @@
 
-class GameRotate {
-    instructions = "Drag around (or Left Right or A D) to rotate the shield";
-    mobileInstructions = 'Aim the shield to block the asteroids using the control area';
+class GameShooter {
+    instructions = "Click anywhere to shoot. Destroy the meteors before they smash you!";
+    mobileInstructions = 'Tap anywhere to shoot. Destroy the meteors before they smash you!';
 
     ended = false;
     playerExists = false;
@@ -15,9 +15,16 @@ class GameRotate {
         minDelay: 1000 / 30,
         incDelay: 500 / 30,
     }
+    bullets = [];
     enemies = [];
     enemiesSpawned = 0;
     enemyTimer;
+
+    isMouseDown = false;
+    mouseAngle = 0;
+    bulletCountdown = 0;
+    bulletDelay = 10;
+    bulletSpeed = 10;
 
     controller = {
         x: 0,
@@ -32,7 +39,7 @@ class GameRotate {
         this.canvasWidth = width;
         this.canvasHeight = height;
 
-        this.playerV = new RotatePlayer(width / 2, height / 2);
+        this.playerV = new ShooterPlayer(width / 2, height / 2);
         this.enemyTimer = new Timer(this.enemyConfig.minDelay, this.enemyConfig.incDelay);
 
         this.controller.x = 0 + this.controller.size + this.controller.padding;
@@ -40,26 +47,26 @@ class GameRotate {
 
         canvasView.canvas.onPointerDown = e => {
             canvasView.vfx.push(new GrowingRing(e.x, e.y, '#666600', 50, 3, 0.3, 0));
-            this.playerV.shielding = true;
+            this.isMouseDown = true;
+            if (isMobile) {
+                this.mouseAngle = Math.atan2(e.y - this.controller.y, e.x - this.controller.x);
+            } else {
+                this.mouseAngle = Math.atan2(e.y - this.playerV.y, e.x - this.playerV.x);
+            }
         }
         canvasView.canvas.onPointerUp = e => {
             canvasView.vfx.push(new GrowingRing(e.x, e.y, '#666600', 50, 3, 0.3, 0));
-            this.playerV.shielding = false;
+            this.isMouseDown = false;
         }
         canvasView.canvas.onPointerUpAnywhere = () => {
         }
 
         canvasView.canvas.onPointerMove = e => {
             if (isMobile) {
-                var distance = Math.sqrt(Math.pow(e.y - this.controller.y, 2) + Math.pow(e.x - this.controller.x, 2));
-                if (distance < this.controller.size) {
-                    var angle = Math.atan2(e.y - this.controller.y, e.x - this.controller.x);
-                    this.playerV.shieldAngle = angle;
-                }
+                this.mouseAngle = Math.atan2(e.y - this.controller.y, e.x - this.controller.x);
             } else {
-                angle = Math.atan2(e.y - this.playerV.y, e.x - this.playerV.x);
-                this.playerV.shieldAngle = angle;
-            }     
+                this.mouseAngle = Math.atan2(e.y - this.playerV.y, e.x - this.playerV.x);
+            }
         }
     }
 
@@ -78,12 +85,27 @@ class GameRotate {
     onTick() {
         if (this.playerExists) {
             this.playerV.update();
+            if (this.bulletCountdown > 0) {
+                this.bulletCountdown--;
+            } else {
+                if (this.isMouseDown) {
+                    this.bulletCountdown = this.bulletDelay;
+                    this.addBullet(this.mouseAngle);
+                }
+            }
         }
 
         this.enemyTimer.tick();
         if (this.enemyTimer.complete()) {
             this.enemyTimer.reset();
             this.addEnemy();
+        }
+
+        for (var i = this.bullets.length - 1; i >= 0; i--) {
+            this.bullets[i].update();
+            if (this.bullets[i].toDestroy) {
+                this.bullets.splice(i, 1);
+            }
         }
 
         for (var i = this.enemies.length - 1; i >= 0; i--) {
@@ -93,18 +115,19 @@ class GameRotate {
                 el.toDestroy = true;
             }
             if (this.playerExists) {
-                if (el.collisionTest(this.playerV, 50)) {
-                    var angle = Math.atan2(el.y - this.playerV.y, el.x - this.playerV.x);
-                    if (angle > this.playerV.shieldAngle - this.playerV.shieldSize && angle < this.playerV.shieldAngle + this.playerV.shieldSize) {
-                        el.toDestroy = true;
-                        canvasView.vfx.push(new Firework(el.x, el.y, 5, '#aa6666', 1));
-                    }
-                }
                 if (el.collisionTest(this.playerV, 15)) {
                     this.playerExists = false;
                     canvasView.vfx.push(new Firework(this.playerV.x, this.playerV.y, 10, '#00ff00', 1));
                 }
             }
+
+            this.bullets.forEach(bullet => {
+                if (bullet.collisionTest(el, 15)) {
+                    bullet.toDestroy = true;
+                    el.toDestroy = true;
+                    canvasView.vfx.push(new Firework(el.x, el.y, 5, '#aa6666', 1));
+                }
+            });
 
             if (el.toDestroy) {
                 this.enemies.splice(i, 1);
@@ -134,13 +157,14 @@ class GameRotate {
         if (!this.ended) this.drawMainShip(canvas,this.playerV.x, this.playerV.y);
         if (this.playerExists) {
             this.drawPlayer(canvas,this.playerV.x, this.playerV.y);
-            canvas.drawPartialCircle(this.playerV.x, this.playerV.y, 30, '#006699', this.playerV.shieldAngle - this.playerV.shieldSize, this.playerV.shieldAngle + this.playerV.shieldSize);
+            canvas.drawPartialCircle(this.playerV.x, this.playerV.y, 30, '#006699', this.mouseAngle - 0.15, this.mouseAngle + 0.15);
         }
         if (isMobile) {
             canvas.drawCircle(this.controller.x, this.controller.y, this.controller.size, '#ffffff', '#eeeebb', 1);
             canvas.drawCircle(this.controller.x, this.controller.y, 10, '#ffffff', '#ffffff', 1);
         }
         this.enemies.forEach(el => this.drawEnemy(canvas, el.x, el.y));
+        this.bullets.forEach(el => this.drawBullet(canvas, el.x, el.y));
         canvas.addText(650, 80, `Enemies Spawned: ${this.enemiesSpawned}`, 12);
     }
 
@@ -167,6 +191,9 @@ class GameRotate {
     drawEnemy(canvas, x, y) {
         canvas.drawCircle(x, y, 15, '#000000', '#aa6666');
     }
+    drawBullet(canvas, x, y) {
+        canvas.drawCircle(x, y, 5, '#000000', '#6666aa');
+    }
 
     addEnemy() {
         var x = this.playerV.x;
@@ -178,63 +205,43 @@ class GameRotate {
             y += 200 * Math.random() - 100;
         }
 
-        this.enemies.push(new RotateEnemy(x, y, speed, Math.PI * 2 * Math.random()));
+        this.enemies.push(new ShooterEnemy(x, y, speed, Math.PI * 2 * Math.random()));
         this.enemiesSpawned++;
+    }
+
+    addBullet(angle) {
+        var bullet = new ShooterEnemy(0, 0, 0, 0);
+        bullet.x = this.playerV.x;
+        bullet.y = this.playerV.y;
+        bullet.vX = this.bulletSpeed * Math.cos(angle);
+        bullet.vY = this.bulletSpeed * Math.sin(angle);
+
+        this.bullets.push(bullet);
     }
 }
 
-class RotatePlayer {
+class ShooterPlayer {
     position = 0;
-    shieldAngle = 0;
-    shieldSize = Math.PI * 0.3;
-    keyboardShieldSpeed = Math.PI * 0.1;
 
     x;
     y;
 
-    leftButton = false;
-    rightButton = false;
-
     constructor(x, y) {
         this.x = x;
         this.y = y;
-        window.addEventListener('keydown', this.keyDown);
-        window.addEventListener('keyup', this.keyUp);        
     }
 
     reset() {
     }
 
     destroy() {
-        window.removeEventListener('keydown', this.keyDown);
-        window.removeEventListener('keyup', this.keyUp);
-    }
-
-    keyDown = (e) => {
-        switch(e.key.toLowerCase()) {
-            case 'a': case 'arrowleft': this.leftButton = true; break;
-            case 'd': case 'arrowright': this.rightButton = true; break;
-        }
-    }
-    
-    keyUp = (e) => {
-        switch(e.key.toLowerCase()) {
-            case 'a': case 'arrowleft': this.leftButton = false; break;
-            case 'd': case 'arrowright': this.rightButton = false; break;
-        }
     }
 
     update() {
-        if (this.leftButton) {
-            this.shieldAngle -= this.keyboardShieldSpeed;
-        }
-        if (this.rightButton) {
-            this.shieldAngle += this.keyboardShieldSpeed;
-        }
     }
 }
 
-class RotateEnemy {
+class ShooterEnemy {
     speed = 0;
     x = 0;
     y = 0;
