@@ -1,7 +1,7 @@
 
 class GameAdvance {
-    instructions = "Use 'w', up or click to jump. Duck under the floating bars!";
-    mobileInstructions = "Tap anywhere to jump. Duck under the floating bars!";
+    instructions = "Use 'w', up or click to jump forwards. Don't get squished!";
+    mobileInstructions = "Tap anywhere to jump forwards. Don't get squished!";
     
     enemyConfig = {
         minSpeed: 10,
@@ -9,13 +9,16 @@ class GameAdvance {
         minDelay: 500 / 30,
         incDelay: 1000 / 30,
     }
-    // {y: number, speed: number (positive = from left, negative = from right), count: number}
-    gameSpeed = 5;
+    // {y: number, speed: number (positive = from left, negative = from right), count: number, tick: number}
+    worldSpeed = 1.5;
     enemyRows = [];
     enemies = [];
     enemiesSpawned = 0;
     enemyTimer;
+    enemyRowTimer;
+    enemyRowDelay = 100;
 
+    mainY = 0;
     playerV;
 
     ended = false;
@@ -29,9 +32,11 @@ class GameAdvance {
         this.canvasWidth = width;
         this.canvasHeight = height;
 
-        this.playerV = new AdvancePlayer(width / 2, height - 250, 100);
+        this.mainY = height / 2;
+        this.playerV = new AdvancePlayer(width / 2, this.mainY);
 
         this.enemyTimer = new Timer(this.enemyConfig.minDelay, this.enemyConfig.incDelay);
+        this.enemyRowTimer = new Timer(this.enemyRowDelay / this.worldSpeed, 0);
 
         canvasView.canvas.onPointerDown = e => {
             canvasView.vfx.push(new GrowingRing(e.x, e.y, '#666600', 50, 3, 0.3, 0));
@@ -55,27 +60,58 @@ class GameAdvance {
         this.enemies = [];
         this.enemiesSpawned = 0;
         this.ended = false;
+        this.playerV.reset();
+        this.enemyRows = [];
+        
+        this.enemyRowTimer.delay = this.enemyRowDelay;
+        for (var y = this.canvasHeight; y >= 0; y -= this.worldSpeed) {
+            this.enemyRowTimer.tick();
+            if (this.enemyRowTimer.complete()) {
+                this.enemyRowTimer.reset();
+                this.addRow(y);
+            }
+        }
     }
 
     onTick() {
+        this.playerV.y += this.worldSpeed;
+        this.enemies.forEach(el => el.y += this.worldSpeed);
+        this.enemyRows.forEach(el => el.y += this.worldSpeed);
         if (this.playerExists) {
             this.playerV.update();
         }
 
-        this.enemyTimer.tick();
-        if (this.enemyTimer.complete()) {
-            this.enemyTimer.reset();
-            this.addEnemy(this.playerV.x)
+        this.enemyRowTimer.tick();
+        if (this.enemyRowTimer.complete()) {
+            this.enemyRowTimer.reset();
+            this.addRow(0);
+        }
+
+        for (var i = this.enemyRows.length - 1; i >= 0; i--) {
+            var row = this.enemyRows[i];
+
+            if (row.y > this.canvasHeight) {
+                this.enemyRows.splice(i, 1);
+            }
+
+            row.tick--;
+            if (row.tick <= 0) {
+                row.tick = 120 / Math.abs(row.speed);
+                row.counter--;
+                if (row.counter > 0) {
+                    this.addEnemy(row, row.speed > 0 ? 0 : this.canvasWidth);
+                } else {
+                    row.counter = row.count;
+                }
+            }
         }
 
         for (var i = this.enemies.length - 1; i >= 0; i--) {
             var el = this.enemies[i];
             el.update();
-            if (this.playerExists && el.collisionTest(this.playerV, 25)) {
-                if ((!el.high && this.playerV.z <= 15) || (el.high && this.playerV.z >= 40)) {
-                    this.playerExists = false;
-                    canvasView.vfx.push(new Firework(this.playerV.x, this.playerV.y - this.playerV.z, 10, '#00ff00', 1));
-                }
+            if (this.playerExists && el.collisionTest(this.playerV)) {
+                this.playerExists = false;
+                canvasView.vfx.push(new Firework(this.playerV.x, this.playerV.y, 10, '#00ff00', 1));
             }
 
             if (el.toDestroy) {
@@ -95,7 +131,7 @@ class GameAdvance {
 
     gameEnd() {
         this.ended = true;
-        canvasView.vfx.push(new Firework(this.playerV.x, this.playerV.y, 20, '#00aaff', 2));
+        canvasView.vfx.push(new Firework(this.playerV.x, this.mainY, 20, '#00aaff', 2));
         if (this.playerExists) {
             canvasView.vfx.push(new Firework(this.playerV.x, this.playerV.y, 10, '#00ff00', 1));
             this.playerExists = false;
@@ -103,14 +139,12 @@ class GameAdvance {
     }
 
     draw(canvas) {
-        if (!this.ended) this.drawMainShip(canvas,this.playerV.x, this.playerV.y);
-        if (this.playerExists) {
-            this.drawShadow(canvas,this.playerV.x, this.playerV.y, 1 / (1 + this.playerV.z / 50));
-        }
+        if (!this.ended) this.drawMainShip(canvas, this.playerV.x, this.mainY);
+        this.enemyRows.forEach(row => this.drawRow(canvas, row));
         this.enemies.forEach(el => (!el.high && this.drawEnemy(canvas, el.x, el.y, el.high)));
         this.enemies.forEach(el => (el.high && this.drawEnemyShadow(canvas, el.x, el.y)));
         if (this.playerExists) {
-            this.drawPlayer(canvas,this.playerV.x, this.playerV.y - this.playerV.z);
+            this.drawPlayer(canvas,this.playerV.x, this.playerV.y);
         }
         this.enemies.forEach(el => (el.high && this.drawEnemy(canvas, el.x, el.y, el.high)));
         canvas.addText(650, 80, `Enemies Spawned: ${this.enemiesSpawned}`, 12);
@@ -148,33 +182,65 @@ class GameAdvance {
         }
     }
 
-    addEnemy(row) {
-        this.enemies.push(new AdvanceEnemy(this.enemyConfig.minSpeed, row, this.canvasHeight, Math.random() < 0.3));
+    drawRow = (canvas, row) => {
+        canvas.drawRect(0, row.y - 25, this.canvasWidth, 50, '#ffffff', 0.3);
+    }
+
+    addEnemy(row, x) {
+        var enemy = new AdvanceEnemy(x, row.y, row.speed, this.canvasWidth);
+        this.enemies.push(enemy);
         this.enemiesSpawned++;
+    }
+
+    addRow(y) {
+        var speed = 3 + Math.random() * 5;
+        if (Math.random() < 0.5) {
+            speed *= -1;
+        }
+
+        var row = {y, speed, count: Math.floor(3 + Math.random() * 3), tick: 0, counter: 0};
+
+        this.enemyRows.push(row);
+
+        for (var i = 0; i < this.canvasWidth; i += Math.abs(row.speed)) {
+            row.tick--;
+            if (row.tick <= 0) {
+                row.tick = 120 / Math.abs(row.speed);
+                row.counter--;
+                if (row.counter > 0) {
+                    this.addEnemy(row, row.speed > 0 ? i : this.canvasWidth - i);
+                } else {
+                    row.counter = row.count;
+                }
+            }
+        }
     }
 }
 
 class AdvancePlayer {
     x;
     y;
-    z = 0;
+    homeY;
 
     jumping = false;
     canJump = false;
     airborn = false;
-
-    distance;
     
-    vZ = 0;
-    gravity = -1;
-    jumpV = 10;
+    vY = 0;
+    friction = 4;
+    jumpV = -22.333;
 
-    constructor(x, y, distance) {
+    constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.distance = distance;
+        this.homeY = y;
         window.addEventListener('keydown', this.keyDown);
         window.addEventListener('keyup', this.keyUp);        
+    }
+
+    reset() {
+        this.vY = 0;
+        this.y = this.homeY;
     }
 
     destroy() {
@@ -197,18 +263,17 @@ class AdvancePlayer {
 
     update() {
         if (this.airborn) {
-            this.vZ += this.gravity;
-            this.z += this.vZ;
-            if (this.z <= 0) {
-                this.z = 0;
+            this.vY += this.friction;
+            this.y += this.vY;
+            if (this.vY >= 0) {
+                this.vY = 0;
                 this.airborn = false;
-                this.vZ = 0;
             }
         } else {
             if (this.jumping && this.canJump) {
                 this.canJump = false;
                 this.airborn = true;
-                this.vZ = this.jumpV;
+                this.vY = this.jumpV;
             }
         }
 
@@ -226,24 +291,25 @@ class AdvanceEnemy {
     maxY = 0;
     toDestroy = false;
 
-    high = true;
 
-    constructor(speed, x, maxY, high) {
-        this.high = high;
-        this.speed = speed;
+    constructor(x, y, speed) {
         this.x = x;
-        this.maxY = maxY;
+        this.y = y;
+        this.speed = speed;
     }
 
     update() {
-        this.y += this.speed;
-        if (this.y > this.maxY) {
-            this.toDestroy = true;
-        }
+        this.x += this.speed;
+        if (this.x > this.maxX) this.toDestroy = true;
+        if (this.x < 0) this.toDestroy = true;
     }
 
-    collisionTest = (player, radius) => {
-        if (this.distanceTo(player.x, player.y) <= radius) {
+    collisionTest = (player) => {
+        if (player.y > this.y - 15 &&
+            player.y < this.y + 15 &&
+            player.x > this.x - 50 &&
+            player.x < this.x + 50
+        ) {
             return true;
         }
 
