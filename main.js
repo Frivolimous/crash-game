@@ -70,10 +70,11 @@ function init() {
     addInteractionButton('Dodge LR', GameBasic);
     addInteractionButton('Shield', GameShieldHold);
     addInteractionButton('Rotate', GameRotate);
-    addInteractionButton('Smooth', GameSmoothDodge);
+    // addInteractionButton('Smooth', GameSmoothDodge);
     addInteractionButton('Jump', GameJump);
     addInteractionButton('Shooter', GameShooter);
     addInteractionButton('Frogger', GameAdvance);
+    addInteractionButton('TwoLane', GameTwoLane);
 
     addFakeResults(10);
     mainController.crash.fakeResult();
@@ -95,6 +96,8 @@ function selectGame(index) {
     mainController.game.destroy();
     mainController.game = game;
     mainController.crash.crashed = true;
+    game.loadAis && game.loadAis(mainController.ais);
+
 }
 
 function addFakeResults(count) {
@@ -120,7 +123,8 @@ function addInteractionButton(text, cc) {
 function simulateResults(count) {
     var results = CrashManager.simulateResults(count);
 
-    return JSON.stringify(results);
+    console.log(results.join(`
+`));
 }
 
 class MainController {
@@ -131,6 +135,7 @@ class MainController {
     game;
     crash = new CrashManager();
     playerM;
+    ais = [];
 
     ticker = new JMTicker(gameConfig.framerate);
 
@@ -143,6 +148,19 @@ class MainController {
 
         this.ticker.onTick = this.onTick;
         this.ticker.start();
+        this.loadAis();
+    }
+
+    loadAis() {
+        this.ais = [
+            new AIModel('BiggestNoob', '#ff9999', 0,  5, 5),
+            new AIModel('Timid', '#cc88ff', 0.3, 1, 2),
+            new AIModel('Standard', '#99ff99', 0.5, 2, 5),
+            new AIModel('HighOctane', '#aacc99', 0.7, 2, 10),
+            new AIModel('PrettyGood', '#9999ee', 0.9, 5, 20),
+            new AIModel('Superstar', '#ffcc00', 1, 20, 50),
+        ];
+        
     }
 
     reset = () => {
@@ -158,6 +176,8 @@ class MainController {
             resultView.playerCanceled('No Entry');
             this.failProcessed = true;
         }
+
+        this.ais.forEach(ai => ai.reset());
     }
 
     onTick = () => {
@@ -170,6 +190,12 @@ class MainController {
                     resultView.playerCrashed();
                 }
                 this.game.gameEnd();
+                this.ais.forEach(ai => {
+                    if (ai.exists) {
+                        ai.exists = false;
+                        ai.status = 'Crash';
+                    }
+                })
                 
                 this.countdownTimer.reset();
             }
@@ -182,7 +208,7 @@ class MainController {
             }
         } else {
             this.crash.onTick();
-            this.game.onTick();
+            this.game.onTick(this.crash.multiplier);
     
             if (!this.game.playerExists) {
                 if (!this.failProcessed) {
@@ -197,6 +223,20 @@ class MainController {
                     }
                 }
             }
+
+            this.ais.forEach(ai => {
+                if (ai.exists) {
+                    if (this.crash.multiplier >= ai.bailThreshold) {
+                        ai.exists = false;
+                        if (this.game.aiPlayers) {
+                            this.game.bailoutEffect(this.game.aiPlayers.find(el => el.ai === ai));
+                        }
+                        var payout = this.crash.multiplier * ai.entryFee;
+                        ai.money += payout;
+                        ai.status = 'Earned: $' + payout.toFixed(2);
+                    }
+                }
+            });
         }
     
         canvasView.drawFrame();
@@ -216,6 +256,7 @@ class MainController {
     playerJoin() {
         this.playerM.entryFee = Number(footer.entryFeeText.value);
         this.playerM.money -= this.playerM.entryFee;
+        this.playerM.status = 'Playing';
 
         this.game.addPlayer();
     }
@@ -257,6 +298,7 @@ class ResultView {
         let newNode = document.createElement('div');
         newNode.classList.add('result-entry');
         newNode.innerHTML = text;
+        mainController.playerM.status = newNode.innerHTML;
         this.mainResultContainer.appendChild(newNode);
         this.checkOverflow(this.mainResultContainer);
     }
@@ -265,6 +307,7 @@ class ResultView {
         let newNode = document.createElement('div');
         newNode.classList.add('result-entry');
         newNode.innerHTML = 'Crash';
+        mainController.playerM.status = newNode.innerHTML;
         newNode.style.background = '#aa4444';
         this.playerResultContainer.appendChild(newNode);
         this.checkOverflow(this.playerResultContainer);
@@ -274,6 +317,7 @@ class ResultView {
         let newNode = document.createElement('div');
         newNode.classList.add('result-entry');
         newNode.innerHTML = 'Fail!';
+        mainController.playerM.status = newNode.innerHTML;
         newNode.style.background = '#bb9944';
         this.playerResultContainer.appendChild(newNode);
         this.checkOverflow(this.playerResultContainer);
@@ -283,6 +327,7 @@ class ResultView {
         let newNode = document.createElement('div');
         newNode.classList.add('result-entry');
         newNode.innerHTML = text;
+        mainController.playerM.status = newNode.innerHTML;
         this.playerResultContainer.appendChild(newNode);
         this.checkOverflow(this.playerResultContainer);
     }
@@ -290,7 +335,8 @@ class ResultView {
     playerResult(mult) {
         let newNode = document.createElement('div');
         newNode.classList.add('result-entry');
-        newNode.append(`Earned: $${mult.toFixed(2)}`);
+        newNode.innerHTML = `Earned: $${mult.toFixed(2)}`;
+        mainController.playerM.status = newNode.innerHTML;
         newNode.style.background = '#44dd44';
         this.playerResultContainer.appendChild(newNode);
         this.checkOverflow(this.playerResultContainer);
@@ -306,7 +352,7 @@ class ResultView {
 class GameView {
     canvas;
     vfx = [];
-    gauge = new MultGauge(220, 125, 200, 15);
+    gauge = new MultGauge(250, 125, 200, 15);
 
     constructor(canvasElement) {
         this.canvas = new CanvasRender(gameConfig.canvasWidth, gameConfig.canvasHeight, canvasElement);
@@ -333,7 +379,7 @@ class GameView {
         }
 
         if (mainController.crash.crashed && footer.autoToggle.checked) {
-            this.canvas.addText(200, 100, `Next run in: ${Math.ceil(mainController.countdownTimer.delay / 1000 * 30)}s`, 30);
+            this.canvas.addText(230, 100, `Next run in: ${Math.ceil(mainController.countdownTimer.delay / 1000 * 30)}s`, 30);
         }
 
         // stats corner
@@ -341,13 +387,28 @@ class GameView {
         this.canvas.addText(650, 40, `Crash Chance: ${mainController.crash.crashChance}%`, 12);
         this.canvas.addText(650, 20, `Framerate: ${mainController.ticker.framerate.toFixed(2)}`, 12);
         this.canvas.addText(650, 60, `Bailout For: $${bailoutCash.toFixed(2)}`, 12);
-        this.canvas.addText(200, 200, `${header}Mult: x${mainController.crash.multiplier.toFixed(2)}`);
+        this.canvas.addText(230, 200, `${header}Mult: x${mainController.crash.multiplier.toFixed(2)}`);
+
+        //leaderboard;
+        // name -- $$$ -- Status;
+        var lY = 70;
+        mainController.ais.forEach(ai => {
+            this.canvas.addText(5, lY, ai.name, 12);
+            this.canvas.addText(90, lY, '$' + ai.money.toFixed(2), 12);
+            this.canvas.addText(150, lY, ai.status, 12);
+            lY += 25;
+        });
+
+        this.canvas.addText(5, lY, 'You', 12);
+        this.canvas.addText(90, lY, '$' + mainController.playerM.money.toFixed(2), 12);
+        this.canvas.addText(150, lY, mainController.playerM.status, 12);
     }
 }
 
 class PlayerModel {
     _Money = 0;
     entryFee;
+    status;
 
     onMoneyChange;
 
@@ -358,6 +419,39 @@ class PlayerModel {
     set money(amount) {
         this._Money = amount;
         this.onMoneyChange && this.onMoneyChange(amount);
+    }
+}
+
+class AIModel {
+    money = 100;
+    entryFee;
+    bailThreshold;
+
+    exists = true;
+
+    name;
+    color;
+    skill;
+    minBail;
+    maxBail;
+
+    status = "No Entry";
+
+    constructor(name, color, skill, minBail, maxBail, entryFee = 1, money = 100) {
+        this.name = name;
+        this.color = color;
+        this.skill = skill;
+        this.minBail = minBail;
+        this.maxBail = maxBail;
+        this.entryFee = entryFee;
+        this.money = money;
+    }
+
+    reset() {
+        this.exists = true;
+        this.money -= this.entryFee;
+        this.status = 'Playing';
+        this.bailThreshold = this.minBail + (this.maxBail - this.minBail) * Math.random();
     }
 }
 
