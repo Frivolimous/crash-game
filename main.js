@@ -22,9 +22,6 @@ const footer = {
 // GameControl
 var mainController;
 
-// Game Model
-var bailoutCash = 0;
-
 // Views
 var canvasView;
 var resultView;
@@ -90,7 +87,7 @@ function testMobile() {
 function selectGame(index) {
     var cc = interactionConstructors[index];
 
-    var game = new cc(gameConfig.canvasWidth, gameConfig.canvasHeight);
+    var game = new cc(gameConfig.canvasWidth, gameConfig.canvasHeight, canvasView);
 
     document.getElementById('instructions-text').innerHTML = isMobile ? game.mobileInstructions : game.instructions;
     mainController.game.destroy();
@@ -98,15 +95,6 @@ function selectGame(index) {
     mainController.crash.crashed = true;
     game.loadAis && game.loadAis(mainController.ais);
 
-}
-
-function addFakeResults(count) {
-    var results = CrashManager.simulateResults(count);
-
-    results.forEach(mult => {
-        resultView.addResult(mult);
-        resultView.playerCanceled('No Entry');
-    });
 }
 
 function addInteractionButton(text, cc) {
@@ -120,6 +108,71 @@ function addInteractionButton(text, cc) {
     header.interactions.appendChild(newButton);
 }
 
+function addFakeResults(count, andAi = false) {
+    var results = CrashManager.simulateResults(count);
+
+    results.forEach(mult => {
+        resultView.addResult(mult);
+        resultView.playerCanceled('No Entry');
+    });
+
+    if (andAi) {
+        var outputTable = [];
+        var header = [];
+        outputTable.push(header);
+        mainController.ais.forEach(ai => {
+            header.push(`${ai.name}: ${ai.minBail} - ${ai.maxBail}`);
+        })
+        results.forEach(mult => {
+            var row = [];
+            outputTable.push(row);
+            mainController.ais.forEach(ai => {
+                ai.reset();
+                if (ai.bailThreshold <= mult) {
+                    ai.money += ai.bailThreshold * ai.entryFee;
+                }
+                row.push(ai.money.toFixed(2));
+            });
+        });
+
+        console.log(outputTable.map(row => row.join('	')).join('\n'));
+    }
+}
+
+function addFakeSkilledResults(count) {
+    mainController.andDraw = false;
+    var autojoin = footer.autoJoin.checked;
+    footer.autoJoin.checked = false;
+
+    var outputTable = [];
+    var resultTable = [];
+    var header = [];
+    outputTable.push(header);
+    resultTable.push(header);
+    mainController.ais.forEach(ai => header.push(`${ai.name}: ${ai.minBail} - ${ai.maxBail}`));
+
+    while(count > 0) {
+        mainController.onTick();
+        if (mainController.crash.crashed && !mainController.crashProcessed) {
+            count--;
+
+            var row = [];
+            var row2 = [];
+            outputTable.push(row);
+            resultTable.push(row2);
+            mainController.ais.forEach(ai => row.push(ai.money.toFixed(2)));
+            mainController.ais.forEach(ai => row2.push(ai.status === 'Playing' ? 'Crash' : ai.status));
+        }
+    }
+
+    mainController.andDraw = true;
+    footer.autoJoin.checked = autojoin;
+    canvasView.vfx = [];
+
+    console.log(outputTable.map(row => row.join('	')).join('\n'));
+    console.log(resultTable.map(row => row.join('	')).join('\n'));
+}
+
 function simulateResults(count) {
     var results = CrashManager.simulateResults(count);
 
@@ -128,6 +181,7 @@ function simulateResults(count) {
 }
 
 class MainController {
+    bailoutCash = 0;
     crashProcessed = true;
     failProcessed = true;
     countdownTimer = new Timer(5000 / 30, 0);
@@ -139,6 +193,7 @@ class MainController {
 
     ticker = new JMTicker(gameConfig.framerate);
 
+    andDraw = true;
 
     constructor(game, playerM) {
         this.game = game;
@@ -154,11 +209,11 @@ class MainController {
     loadAis() {
         this.ais = [
             new AIModel('BiggestNoob', '#ff9999', 0,  5, 5),
-            new AIModel('Timid', '#cc88ff', 0.3, 1, 2),
-            new AIModel('Standard', '#99ff99', 0.5, 2, 5),
-            new AIModel('HighOctane', '#aacc99', 0.7, 2, 10),
+            new AIModel('Timid', '#cc88ff', 0.7, 1, 2),
+            new AIModel('Standard', '#99ff99', 0.8, 2, 5),
+            new AIModel('HighOctane', '#aacc99', 0.85, 2, 10),
             new AIModel('PrettyGood', '#9999ee', 0.9, 5, 20),
-            new AIModel('Superstar', '#ffcc00', 1, 20, 50),
+            new AIModel('Superstar', '#ffcc00', 0.95, 20, 50),
         ];
         
     }
@@ -216,7 +271,7 @@ class MainController {
                     resultView.playerFailed();
                 }
             } else {
-                bailoutCash = this.crash.multiplier * this.playerM.entryFee;
+                this.bailoutCash = this.crash.multiplier * this.playerM.entryFee;
                 if (footer.autoBail.checked) {
                     if (this.crash.multiplier >= Number(footer.autoBailText.value)) {
                         this.bailout();
@@ -238,8 +293,10 @@ class MainController {
                 }
             });
         }
-    
-        canvasView.drawFrame();
+        
+        if (this.andDraw) {
+            canvasView.drawFrame();
+        }
     }
 
     bailout = () => {
@@ -386,7 +443,7 @@ class GameView {
         this.gauge.update(this.canvas, mainController.crash.crashChance / 100);
         this.canvas.addText(650, 40, `Crash Chance: ${mainController.crash.crashChance}%`, 12);
         this.canvas.addText(650, 20, `Framerate: ${mainController.ticker.framerate.toFixed(2)}`, 12);
-        this.canvas.addText(650, 60, `Bailout For: $${bailoutCash.toFixed(2)}`, 12);
+        this.canvas.addText(650, 60, `Bailout For: $${mainController.bailoutCash.toFixed(2)}`, 12);
         this.canvas.addText(230, 200, `${header}Mult: x${mainController.crash.multiplier.toFixed(2)}`);
 
         //leaderboard;

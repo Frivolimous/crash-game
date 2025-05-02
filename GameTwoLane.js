@@ -30,22 +30,26 @@ class GameTwoLane {
     maxConsecutive = 1;
     consecutive = 0;
 
-    constructor(width, height) {
+    gameView;
+
+
+    constructor(width, height, gameView) {
         this.canvasWidth = width;
         this.canvasHeight = height;
+        this.gameView = gameView;
 
         this.playerV = new TwoLanePlayer(width / 2, height - 200, 50, true);
 
         this.enemyTimer = new Timer(this.enemyConfig.minDelay, this.enemyConfig.incDelay);
 
-        canvasView.canvas.onPointerDown = e => {
+        this.gameView.onPointerDown = e => {
             this.playerV.swapLane();
-            canvasView.vfx.push(new GrowingRing(e.x, e.y, '#666600', 50, 3, 0.3, 0));
+            this.gameView.vfx.push(new GrowingRing(e.x, e.y, '#666600', 50, 3, 0.3, 0));
         }
-        canvasView.canvas.onPointerUp = e => {
-            canvasView.vfx.push(new GrowingRing(e.x, e.y, '#666600', 50, 3, 0.3, 0));
+        this.gameView.onPointerUp = e => {
+            this.gameView.vfx.push(new GrowingRing(e.x, e.y, '#666600', 50, 3, 0.3, 0));
         }
-        canvasView.canvas.onPointerUpAnywhere = () => {
+        this.gameView.onPointerUpAnywhere = () => {
         }
     }
 
@@ -94,14 +98,14 @@ class GameTwoLane {
             el.update();
             if (this.playerExists && el.collisionTest(this.playerV)) {
                 this.playerExists = false;
-                canvasView.vfx.push(new Firework(this.playerV.x, this.playerV.y, 10, '#00ff00', 1));
+                this.gameView.vfx.push(new Firework(this.playerV.x, this.playerV.y, 10, '#00ff00', 1));
             }
 
             this.aiPlayers.forEach(ai => {
                 if (ai.ai.exists && el.collisionTest(ai.player)) {
                     ai.ai.exists = false;
                     ai.ai.status = 'Fail!';
-                    canvasView.vfx.push(new Firework(ai.x, ai.y, 10, ai.color, 1));
+                    this.gameView.vfx.push(new Firework(ai.x, ai.y, 10, ai.color, 1));
                 }
             });
 
@@ -122,49 +126,49 @@ class GameTwoLane {
 
     gameEnd() {
         this.ended = true;
-        canvasView.vfx.push(new Firework(this.playerV.location.x, this.playerV.location.y, 20, '#00aaff', 2));
+        this.gameView.vfx.push(new Firework(this.playerV.location.x, this.playerV.location.y, 20, '#00aaff', 2));
         if (this.playerExists) {
-            canvasView.vfx.push(new Firework(this.playerV.x, this.playerV.y, 10, '#00ff00', 1));
+            this.gameView.vfx.push(new Firework(this.playerV.x, this.playerV.y, 10, '#00ff00', 1));
             this.playerExists = false;
         }
         this.aiPlayers.forEach(ai => {
             if (ai.ai.exists) {
-                canvasView.vfx.push(new Firework(ai.x, ai.y, 10, ai.color, 1));
+                this.gameView.vfx.push(new Firework(ai.x, ai.y, 10, ai.color, 1));
             }
          });
     }
 
-    draw(canvas) {
-        if (!this.ended) this.drawMainShip(canvas,this.playerV.location.x, this.playerV.location.y);
+    draw() {
+        if (!this.ended) this.drawMainShip(this.playerV.location.x, this.playerV.location.y);
         this.aiPlayers.forEach(ai => {
             if (ai.ai.exists) {
-                this.drawPlayer(canvas, ai.x , ai.y, ai.color);
+                this.drawPlayer(ai.x , ai.y, ai.color);
             }
         });
-        if (this.playerExists) this.drawPlayer(canvas,this.playerV.x, this.playerV.y);
-        this.enemies.forEach(el => this.drawEnemy(canvas, el));
-        canvas.addText(650, 80, `Enemies Spawned: ${this.enemiesSpawned}`, 12);
+        if (this.playerExists) this.drawPlayer(this.playerV.x, this.playerV.y);
+        this.enemies.forEach(el => this.drawEnemy(el));
+        this.gameView.canvas.addText(650, 80, `Enemies Spawned: ${this.enemiesSpawned}`, 12);
     }
 
-    drawMainShip(canvas, x, y) {
-        canvas.drawCircle(x, y, 30, '#000000', '#00aaff');
-        canvas.drawElipse(x, y, 90, 30, '#000000', '#00aaff');
+    drawMainShip(x, y) {
+        this.gameView.canvas.drawCircle(x, y, 30, '#000000', '#00aaff');
+        this.gameView.canvas.drawElipse(x, y, 90, 30, '#000000', '#00aaff');
     }
     
-    drawPlayer(canvas, x, y, color = '#00ff00') {
-        canvas.drawCircle(x, y, 10, '#000000', color);
+    drawPlayer(x, y, color = '#00ff00') {
+        this.gameView.canvas.drawCircle(x, y, 10, '#000000', color);
     }
 
     bailoutEffect = (player) => {
-        canvasView.vfx.push(new GrowingCircle(player.x, player.y, '#00ff00', 10, 1, 0.01));
-        canvasView.vfx.push(new FlyingText(player.x, player.y, 'Bailout!', '#000000', 10, 1.5, 0.03));
-        canvasView.vfx.push(new GrowingRing(player.x, player.y, '#44ff77', 1, 3, 0.1, 0));
-        canvasView.vfx.push(new GrowingRing(player.x, player.y, '#44ff77', 1, 3, 0.1, 6));
-        canvasView.vfx.push(new GrowingRing(player.x, player.y, '#44ff77', 1, 3, 0.1, 12));
+        this.gameView.vfx.push(new GrowingCircle(player.x, player.y, '#00ff00', 10, 1, 0.01));
+        this.gameView.vfx.push(new FlyingText(player.x, player.y, 'Bailout!', '#000000', 10, 1.5, 0.03));
+        this.gameView.vfx.push(new GrowingRing(player.x, player.y, '#44ff77', 1, 3, 0.1, 0));
+        this.gameView.vfx.push(new GrowingRing(player.x, player.y, '#44ff77', 1, 3, 0.1, 6));
+        this.gameView.vfx.push(new GrowingRing(player.x, player.y, '#44ff77', 1, 3, 0.1, 12));
     }
 
-    drawEnemy(canvas, enemy) {
-        canvas.drawRect(enemy.x - enemy.width / 2, enemy.y - enemy.height, enemy.width, enemy.height, '#aa6666');
+    drawEnemy(enemy) {
+        this.gameView.canvas.drawRect(enemy.x - enemy.width / 2, enemy.y - enemy.height, enemy.width, enemy.height, '#aa6666');
     }
 
     addEnemy() {
@@ -234,26 +238,26 @@ class TwoLaneAI {
                 if (prevEnemy) {
                     var dPrev = prevEnemy.y - prevEnemy.height - this.player.y;
                     if (nextEnemy.row === this.player.position) {
-                        if (dPrev > -40 && dNext > 50) {
+                        if (dPrev >= -40 && dNext >= 50) {
                             if (Math.random() > 0.4) {
                                 this.player.swapLane();
                             }
                         } else if (dPrev < -40) {
                             // die early
-                            if (Math.random() > 0.99 + this.skill * 0.01) {
+                            if (Math.random() > 0.997 + this.skill * 0.003) {
                                 this.player.swapLane();
                             }
                         } else if (dNext < 50) {
                             // last chance
-                            if (Math.random() > 0.4 + this.skill * 0.6) {
+                            if (Math.random() > 0.2 - this.skill * 0.2) {
                                 this.player.swapLane();
                             }
                         }
                     }
                 } else {
                     if (nextEnemy.row === this.player.position) {
-                        if (dNext < 200) {
-                            if (Math.random() > 0.5) {
+                        if (dNext < 200 + 50 * this.skill) {
+                            if (Math.random() > 0.3 - this.skill * 0.3) {
                                 this.player.swapLane();
                             }
                         }
