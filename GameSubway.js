@@ -1,7 +1,7 @@
 
 class GameSubway {
-    instructions = "Use 'a' and 'd' or Left / Right Arrows to dodge left or right";
-    mobileInstructions = "Tap on the left or right sides of the screen to dodge left or right";
+    instructions = "Use 'a' and 'd' or Left / Right Arrows to dodge left or right. Swipe with mouse (Use the phone for best swiping)";
+    mobileInstructions = "Swipe left or right to dodge left or right.";
     
     enemyConfig = {
         minSpeed: 10,

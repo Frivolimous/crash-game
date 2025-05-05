@@ -70,6 +70,17 @@ class CanvasRender {
             
             var location = {x: e.offsetX * element.width / r.width, y: e.offsetY * element.height / r.height};
             this.onPointerMove && this.onPointerMove(location);
+
+            if (swiping) {
+                var distance = Math.sqrt(Math.pow(location.x - swiping.x, 2) + Math.pow(location.y - swiping.y, 2));
+
+                if (distance > swipeMinDistance) {
+                    var angle = Math.atan2(location.y - swiping.y, location.x - swiping.x);
+                    swiping = null;
+
+                    this.onSwipe && this.onSwipe(angle);
+                }
+            }
         });
     }
 

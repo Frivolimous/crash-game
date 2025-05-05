@@ -1,7 +1,7 @@
 
 class GameJetpack {
-    instructions = "Click anywhere to shoot. Destroy the meteors before they smash you!";
-    mobileInstructions = 'Tap anywhere to shoot. Destroy the meteors before they smash you!';
+    instructions = "Click, W or 'Up' to fly upwards. release to fall.";
+    mobileInstructions = 'Tap and hold to fly upwards, release to fall.';
 
     ended = false;
     playerExists = false;
