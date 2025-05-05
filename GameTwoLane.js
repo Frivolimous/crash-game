@@ -6,9 +6,9 @@ class GameTwoLane {
     enemyConfig = {
         minSpeed: 10,
         incSpeed: 0,
-        minDelay: 750 / 30,
+        minDelay: 800 / 30,
         incDelay: 50 / 30,
-        minHeight: 150,
+        minHeight: 125,
         incHeight: 50,
     }
 
@@ -239,16 +239,18 @@ class TwoLaneAI {
                     var dPrev = prevEnemy.y - prevEnemy.height - this.player.y;
                     if (nextEnemy.row === this.player.position) {
                         if (dPrev >= -40 && dNext >= 50) {
-                            if (Math.random() > 0.4) {
+                            if (Math.random() > 0.95 - this.skill * 0.05) {
                                 this.player.swapLane();
                             }
                         } else if (dPrev < -40) {
                             // die early
+                            // if (Math.random() > 1) {
                             if (Math.random() > 0.997 + this.skill * 0.003) {
                                 this.player.swapLane();
                             }
                         } else if (dNext < 50) {
                             // last chance
+                            // if (Math.random() > 0) {
                             if (Math.random() > 0.2 - this.skill * 0.2) {
                                 this.player.swapLane();
                             }
@@ -256,8 +258,8 @@ class TwoLaneAI {
                     }
                 } else {
                     if (nextEnemy.row === this.player.position) {
-                        if (dNext < 200 + 50 * this.skill) {
-                            if (Math.random() > 0.3 - this.skill * 0.3) {
+                        if (dNext < 200 + 100 * this.skill) {
+                            if (Math.random() > 0.7 - this.skill * 0.7) {
                                 this.player.swapLane();
                             }
                         }

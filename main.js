@@ -65,8 +65,10 @@ function init() {
 
     addInteractionButton('None', GameAbstract);
     addInteractionButton('Dodge LR', GameBasic);
-    addInteractionButton('Shield', GameShieldHold);
-    addInteractionButton('Rotate', GameRotate);
+    addInteractionButton('Swipe LR', GameSubway);
+    addInteractionButton('Float', GameJetpack);
+    // addInteractionButton('Shield', GameShieldHold);
+    // addInteractionButton('Rotate', GameRotate);
     // addInteractionButton('Smooth', GameSmoothDodge);
     addInteractionButton('Jump', GameJump);
     addInteractionButton('Shooter', GameShooter);
@@ -77,7 +79,7 @@ function init() {
     mainController.crash.fakeResult();
     resultView.addResult(mainController.crash.multiplier);
     resultView.playerCanceled('No Entry');
-    selectGame(7);
+    selectGame(3);
 }
 
 function testMobile() {
@@ -139,7 +141,7 @@ function addFakeResults(count, andAi = false) {
     }
 }
 
-function addFakeSkilledResults(count) {
+function addFakeSkilledResults(count = 1000) {
     mainController.andDraw = false;
     var autojoin = footer.autoJoin.checked;
     footer.autoJoin.checked = false;
@@ -171,6 +173,43 @@ function addFakeSkilledResults(count) {
 
     console.log(outputTable.map(row => row.join('	')).join('\n'));
     console.log(resultTable.map(row => row.join('	')).join('\n'));
+
+    var sHeader = [''];
+    header.forEach(el => sHeader.push(el));
+    var fail = ['Fail!'];
+    var crash = ['Crash'];
+    var earned = ['Earned'];
+    var biggest = ['Biggest Multiplier'];
+
+    var rtp100 = ['RTP: 100'];
+    var rtp500 = ['RTP: 500'];
+    var rtp1000 = ['RTP:1000'];
+    var summary = [sHeader, fail, crash, earned, biggest, rtp100, rtp500, rtp1000];
+    var totalGames = outputTable.length - 1;
+
+    mainController.ais.forEach((ai, i) => {
+        var myStatus = resultTable.map(s => s[i]);
+        var myOutput = outputTable.map(s => s[i]);
+        var myMults = myOutput.map((el, i) => {
+            if (i <= 1) return 0;
+            return el - myOutput[i - 1] + 1;
+        });
+
+        var failRate = myStatus.filter(el => el === 'Fail!').length / totalGames;
+        var crashRate = myStatus.filter(el => el === 'Crash').length / totalGames;
+        
+        fail.push(failRate.toFixed(2));
+        crash.push(crashRate.toFixed(2));
+        earned.push((1 - failRate - crashRate).toFixed(2));
+        biggest.push(Math.max(...myMults));
+        rtp100.push(myOutput[100] / 100);
+        rtp500.push(myOutput[500] / 100);
+        rtp1000.push(myOutput[1000] / 100);
+
+    });
+    console.log(summary.map(row => row.join('	')).join('\n'));
+
+    return [summary[1][1],summary[1][6]];
 }
 
 function simulateResults(count) {
@@ -211,9 +250,9 @@ class MainController {
             new AIModel('BiggestNoob', '#ff9999', 0,  5, 5),
             new AIModel('Timid', '#cc88ff', 0.7, 1, 2),
             new AIModel('Standard', '#99ff99', 0.8, 2, 5),
-            new AIModel('HighOctane', '#aacc99', 0.85, 2, 10),
-            new AIModel('PrettyGood', '#9999ee', 0.9, 5, 20),
-            new AIModel('Superstar', '#ffcc00', 0.95, 20, 50),
+            new AIModel('HighOctane', '#aacc99', 0.75, 2, 10),
+            new AIModel('PrettyGood', '#9999ee', 0.94, 5, 20),
+            new AIModel('Superstar', '#ffcc00', 0.97, 20, 50),
         ];
         
     }

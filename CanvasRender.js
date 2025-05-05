@@ -8,6 +8,7 @@ class CanvasRender {
     onPointerUp;
     onPointerUpAnywhere;
     onPointerMove;
+    onSwipe;
 
     constructor(width, height, element) {
         this.Element = element;
@@ -18,11 +19,18 @@ class CanvasRender {
         element.width = this.Width;
         element.height = this.Height;
 
+        var swiping;
+        var swipeMinDistance = 100;
+        var swipeMaxTime = 200;
+
         element.addEventListener('pointerdown', e => {
             let r = element.getBoundingClientRect();
             
             var location = {x: e.offsetX * element.width / r.width, y: e.offsetY * element.height / r.height};
             this.onPointerDown && this.onPointerDown(location);
+
+            swiping = {x: location.x, y: location.y};
+            window.setTimeout(e => swiping = null, swipeMaxTime);
         });
 
         element.addEventListener('pointerup', e => {
@@ -30,6 +38,8 @@ class CanvasRender {
             
             var location = {x: e.offsetX * element.width / r.width, y: e.offsetY * element.height / r.height};
             this.onPointerUp && this.onPointerUp(location);
+
+            swiping = null;
         });
 
         element.addEventListener('pointerleave', e => {
@@ -42,6 +52,17 @@ class CanvasRender {
             var y = e.targetTouches[0].pageY * element.height / r.height;
             var location = {x, y};
             this.onPointerMove && this.onPointerMove(location);
+
+            if (swiping) {
+                var distance = Math.sqrt(Math.pow(x - swiping.x, 2) + Math.pow(y - swiping.y, 2));
+
+                if (distance > swipeMinDistance) {
+                    var angle = Math.atan2(y - swiping.y, x - swiping.x);
+                    swiping = null;
+
+                    this.onSwipe && this.onSwipe(angle);
+                }
+            }
         });
 
         element.addEventListener('mousemove', e => {
