@@ -106,7 +106,10 @@ function addInteractionButton(text, cc) {
     var newButton = document.createElement('button');
     newButton.classList.add('interaction-select-button');
     newButton.innerHTML = text;
-    newButton.onclick = () => selectGame(index);
+    newButton.onclick = () => {
+        selectGame(index);
+        document.activeElement.blur();
+    }
     header.interactions.appendChild(newButton);
 }
 
