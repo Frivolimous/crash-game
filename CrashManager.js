@@ -63,4 +63,4 @@ class CrashManager {
     }
 }
 
-const CrashChances = CrashChances96;
+const CrashChances = CrashChances99;
