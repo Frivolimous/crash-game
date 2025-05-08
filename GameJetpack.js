@@ -15,8 +15,8 @@ class GameJetpack {
     enemyConfig = {
         minSpeed: 5,
         incSpeed: 5,
-        minDelay: 500 / 30,
-        incDelay: 200 / 30,
+        minDelay: 1000 / 30,
+        incDelay: 300 / 30,
     }
     bullets = [];
     enemies = [];
@@ -90,7 +90,7 @@ class GameJetpack {
                 el.toDestroy = true;
             }
             if (this.playerExists) {
-                if (el.collisionTest(this.playerV, el.size + 5)) {
+                if (el.collisionTest(this.playerV, 25)) {
                     this.playerExists = false;
                     canvasView.vfx.push(new Firework(this.playerV.x, this.playerV.y, 10, '#00ff00', 1));
                 }
@@ -143,11 +143,12 @@ class GameJetpack {
     }
 
     drawMainShip(canvas, x, y) {
-        canvas.drawCircle(x, y, 30, '#000000', '#00aaff');
+        canvas.drawCircle(x, y, 50, '#000000', '#00aaff');
     }
     
     drawPlayer(canvas, x, y) {
-        canvas.drawCircle(x, y, 10, '#000000', '#00ff00');
+        // canvas.drawElipse(x, y, 50, 30, '#000000', '#00ff00');
+        canvas.drawCircle(x, y, 30, '#000000', '#00ff00');
     }
 
     drawShield(canvas, x, y, percent) {
@@ -170,24 +171,24 @@ class GameJetpack {
     }
 
     addEnemy() {
-        // var x = this.playerV.x;
-        // var y = this.playerV.y;
-        var x = this.canvasWidth;
-        var y = this.minY + Math.random() * (this.maxY - this.minY);
-
-        if (Math.random() < 0.1) {
-            y = this.maxY - Math.random() * 50;
-        }
+        
+        // if (Math.random() < 0.1) {
+            //     y = this.maxY - Math.random() * 50;
+            // }
+        var x = this.canvasWidth + 30;
+        var y = this.minY + Math.random() * (this.maxY - this.minY) / 4;
         var speed = this.enemyConfig.minSpeed + Math.random() * this.enemyConfig.incSpeed;
+        this.enemies.push(new JetpackEnemy(x + Math.random() * 200, y, speed, Math.PI, 15 + Math.random() * 10));
 
-        // if (Math.random() < 0.8) {
-        //     x += 200 * Math.random() - 100;
-        //     y += 200 * Math.random() - 100;
-        // }
+        y = this.minY + (this.maxY - this.minY) / 4 + Math.random() * (this.maxY - this.minY) / 2;
+        speed = this.enemyConfig.minSpeed + Math.random() * this.enemyConfig.incSpeed;
+        this.enemies.push(new JetpackEnemy(x + Math.random() * 200, y, speed, Math.PI, 15 + Math.random() * 10));
 
-        this.enemies.push(new JetpackEnemy(x, y, speed, Math.PI, 15 + Math.random() * 10));
-        // this.enemies.push(new JetpackEnemy(x, y, speed, Math.PI * 2 * Math.random()));
-        this.enemiesSpawned++;
+        y = this.minY + (this.maxY - this.minY) * 3 / 4 + Math.random() * (this.maxY - this.minY) / 4;
+        speed = this.enemyConfig.minSpeed + Math.random() * this.enemyConfig.incSpeed;
+        this.enemies.push(new JetpackEnemy(x + Math.random() * 200, y, speed, Math.PI, 15 + Math.random() * 10));
+
+        this.enemiesSpawned += 3;
     }
 
     addBullet(angle) {
@@ -253,11 +254,11 @@ class JetpackPlayer {
         else this.vY += this.fallA;
 
         this.y += this.vY;
-        if (this.y < this.minY) {
-            this.y = this.minY;
+        if (this.y < this.minY + 15) {
+            this.y = this.minY + 15;
             this.vY = 0;
-        } else if (this.y > this.maxY) {
-            this.y = this.maxY;
+        } else if (this.y > this.maxY - 15) {
+            this.y = this.maxY - 15;
             this.vY = 0;
         }
     }
@@ -298,7 +299,7 @@ class JetpackEnemy {
     }
 
     collisionTest = (player, radius) => {
-        if (this.distanceTo(player.x, player.y) <= radius) {
+        if (this.distanceTo(player.x, player.y) <= radius + this.size) {
             return true;
         }
 
