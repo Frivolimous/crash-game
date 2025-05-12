@@ -42,14 +42,15 @@ class GameTwoLane {
 
         this.enemyTimer = new Timer(this.enemyConfig.minDelay, this.enemyConfig.incDelay);
 
-        this.gameView.onPointerDown = e => {
+        this.gameView.canvas.onPointerDown = e => {
             this.playerV.swapLane();
+            console.log("A");
             this.gameView.vfx.push(new GrowingRing(e.x, e.y, '#666600', 50, 3, 0.3, 0));
         }
-        this.gameView.onPointerUp = e => {
+        this.gameView.canvas.onPointerUp = e => {
             this.gameView.vfx.push(new GrowingRing(e.x, e.y, '#666600', 50, 3, 0.3, 0));
         }
-        this.gameView.onPointerUpAnywhere = () => {
+        this.gameView.canvas.onPointerUpAnywhere = () => {
         }
     }
 
