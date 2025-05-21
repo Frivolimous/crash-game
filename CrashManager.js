@@ -13,7 +13,7 @@ class CrashManager {
     }
 
     
-    canCrash = false;
+    canCrash = true;
     useFormula = true;
 
     multiplier = 0;
